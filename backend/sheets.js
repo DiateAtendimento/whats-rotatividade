@@ -28,15 +28,19 @@ async function validarSenha(senhaDigitada) {
 async function salvarLista(nomeAba, dados) {
   await acessarPlanilha();
   let aba = doc.sheetsByTitle[nomeAba];
+
   if (!aba) {
     aba = await doc.addSheet({ title: nomeAba, headerValues: ['Nome'] });
   } else {
-    await aba.clear();
+    // Se já existir, apenas apague as linhas mantendo o cabeçalho
+    const linhas = await aba.getRows();
+    for (const linha of linhas) await linha.delete();
   }
 
   const linhas = dados.map(nome => ({ Nome: nome }));
   await aba.addRows(linhas);
 }
+
 
 // Salvar quadros semanais gerados
 async function salvarRotatividade({ quadros, mes, ano, responsavel }) {
