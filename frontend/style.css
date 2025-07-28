@@ -1,0 +1,16 @@
+body {
+  font-family: 'Segoe UI', sans-serif;
+}
+
+.card-header {
+  font-weight: bold;
+  font-size: 1.1rem;
+}
+
+#gerarRotatividadeBtn {
+  transition: all 0.3s ease;
+}
+
+#gerarRotatividadeBtn:hover {
+  transform: scale(1.05);
+}
