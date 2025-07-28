@@ -1,0 +1,34 @@
+# Node.js
+node_modules/
+.env
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Editor configs
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Arquivos temporários
+*.bak
+*.tmp
+
+# Sistema de build (opcional)
+dist/
+build/
+
+# Mac/Linux swap files
+*~
+
+# Ignora arquivos compactados locais
+*.zip
+
+# Cache do frontend (opcional)
+frontend/.cache/
