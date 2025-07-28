@@ -29,7 +29,14 @@ app.get('/', (req, res) => {
   res.send('Servidor da Rotatividade de Atendimentos ativo! ✅');
 });
 
+app.use((req, res) => {
+  res.status(404).send('Rota não encontrada: ' + req.originalUrl);
+});
+
+
 // Inicia servidor
 app.listen(PORT, () => {
   console.log(`Servidor rodando em http://localhost:${PORT}`);
 });
+
+
