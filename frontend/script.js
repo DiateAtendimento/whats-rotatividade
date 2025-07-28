@@ -1,3 +1,5 @@
+const API_URL = 'https://rotatividade-backend.onrender.com/api/rotatividade';
+
 const senhaModal = new bootstrap.Modal(document.getElementById('senhaModal'));
 const senhaInput = document.getElementById('senhaInput');
 const erroSenha = document.getElementById('erroSenha');
@@ -5,8 +7,8 @@ const erroSenha = document.getElementById('erroSenha');
 let atendentes = ['Samara', 'Thayná', 'Mateus'];
 let solicitantes = ['Consultor', 'Contatos Novos', 'RPPS'];
 
-let tipoAtual = ''; // 'atendente' ou 'solicitante'
-let modo = '';      // 'novo' ou 'editar'
+let tipoAtual = '';
+let modo = '';
 let indexAtual = -1;
 
 const modal = new bootstrap.Modal(document.getElementById('crudModal'));
@@ -107,7 +109,7 @@ function renderizarTabelaCruzada() {
 
   html += '</tr></thead><tbody>';
 
-  atendentes.forEach((a, i) => {
+  atendentes.forEach((a) => {
     html += `<tr><td><strong>${a}</strong></td>`;
     solicitantes.forEach(() => {
       html += `<td class="text-center">-</td>`;
@@ -124,8 +126,26 @@ function renderizarTabelaCruzada() {
 renderizarAtendentes();
 renderizarSolicitantes();
 
+// Carrega cache
+const cache = localStorage.getItem('rotatividade');
+if (cache) {
+  const { quadros, mes, ano } = JSON.parse(cache);
+  const container = document.getElementById('quadrosContainer');
+  container.innerHTML = `<h4 class="text-primary">📅 Referente a: ${mes} de ${ano}</h4>`;
 
-//---------------------Lógica de rotação------------------
+  quadros.forEach((semanaData, i) => {
+    let html = `<h5 class="mt-4">📆 Semana ${i + 1}</h5>`;
+    html += '<div class="table-responsive"><table class="table table-bordered">';
+    html += '<thead><tr><th>Solicitante</th><th>Atendente Responsável</th></tr></thead><tbody>';
+    semanaData.forEach(({ solicitante, atendente }) => {
+      html += `<tr><td>${solicitante}</td><td>${atendente}</td></tr>`;
+    });
+    html += '</tbody></table></div>';
+    container.innerHTML += html;
+  });
+}
+
+// --------------------- Geração da Rotatividade ------------------
 
 document.getElementById('gerarRotatividadeBtn').addEventListener('click', () => {
   senhaInput.value = '';
@@ -139,50 +159,87 @@ function gerarQuadrosSemanais() {
 
   const semanas = contarSemanasDoMesAtual();
   const totalAtendentes = atendentes.length;
+  const quadros = [];
+  const now = new Date();
+  const ano = now.getFullYear();
+  const mes = now.toLocaleDateString('pt-BR', { month: 'long' });
 
   if (solicitantes.length === 0 || atendentes.length === 0) {
     container.innerHTML = `<p class="text-danger">⚠️ É necessário ter pelo menos 1 atendente e 1 solicitante para gerar a rotatividade.</p>`;
     return;
   }
 
+  container.innerHTML = `<h4 class="text-primary">📅 Referente a: ${mes} de ${ano}</h4>`;
+
   for (let semana = 0; semana < semanas; semana++) {
-    let html = `<h5 class="mt-4">📅 Semana ${semana + 1}</h5>`;
+    let html = `<h5 class="mt-4">📆 Semana ${semana + 1}</h5>`;
     html += '<div class="table-responsive"><table class="table table-bordered">';
     html += '<thead><tr><th>Solicitante</th><th>Atendente Responsável</th></tr></thead><tbody>';
 
+    const semanaData = [];
+
     solicitantes.forEach((sol, i) => {
       const atendenteIndex = (i + semana) % totalAtendentes;
-      html += `<tr><td>${sol}</td><td>${atendentes[atendenteIndex]}</td></tr>`;
+      const atendente = atendentes[atendenteIndex];
+      html += `<tr><td>${sol}</td><td>${atendente}</td></tr>`;
+      semanaData.push({ solicitante: sol, atendente });
     });
 
     html += '</tbody></table></div>';
     container.innerHTML += html;
+
+    quadros.push(semanaData);
   }
+
+  const dados = {
+    atendentes,
+    solicitantes,
+    quadros,
+    mes,
+    ano,
+    responsavel: 'admin'
+  };
+
+  localStorage.setItem('rotatividade', JSON.stringify(dados));
+
+  fetch(`${API_URL}/gerar-tabelas`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(dados),
+  })
+    .then(res => res.json())
+    .then(res => {
+      if (res.ok) {
+        console.log('✅ Rotatividade salva com sucesso no Google Sheets.');
+      } else {
+        console.error('❌ Erro ao salvar rotatividade:', res.erro);
+      }
+    })
+    .catch(err => {
+      console.error('❌ Falha na requisição ao backend:', err);
+    });
 }
 
-// Conta quantas semanas o mês atual possui
 function contarSemanasDoMesAtual() {
   const now = new Date();
   const ano = now.getFullYear();
-  const mes = now.getMonth(); // 0-indexado
+  const mes = now.getMonth();
   const primeiroDia = new Date(ano, mes, 1);
   const ultimoDia = new Date(ano, mes + 1, 0);
 
   const diasNoMes = ultimoDia.getDate();
-  const primeiraSemana = primeiroDia.getDay(); // 0 = domingo
-  const diasTotais = primeiraSemana + diasNoMes;
+  const primeiraSemana = primeiroDia.getDay();
 
-  return Math.ceil(diasTotais / 7);
+  return Math.ceil((primeiraSemana + diasNoMes) / 7);
 }
 
-
-//---------------------Verifica a Senha------------------
+// --------------------- Validação da senha ------------------
 
 document.getElementById('confirmarSenhaBtn').addEventListener('click', async () => {
   const senha = senhaInput.value.trim();
   if (!senha) return;
 
-  const resposta = await fetch('https://SEU_BACKEND_URL/validar-senha', {
+  const resposta = await fetch(`${API_URL}/validar-senha`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ senha }),
@@ -192,7 +249,7 @@ document.getElementById('confirmarSenhaBtn').addEventListener('click', async () 
 
   if (resultado.ok) {
     senhaModal.hide();
-    gerarQuadrosSemanais(); // Gera e salva as tabelas
+    gerarQuadrosSemanais();
   } else {
     erroSenha.classList.remove('d-none');
   }

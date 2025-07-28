@@ -1,34 +1,37 @@
 # Node.js
 node_modules/
 .env
-
-# Logs
+*.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 
-# Editor configs
+# Editor settings
 .vscode/
 .idea/
 
-# OS
+# OS files
 .DS_Store
 Thumbs.db
 
-# Arquivos temporários
+# Backup files
 *.bak
 *.tmp
+*~
 
-# Sistema de build (opcional)
+# Build e dist (caso venha a usar futuramente)
 dist/
 build/
 
-# Mac/Linux swap files
-*~
-
-# Ignora arquivos compactados locais
-*.zip
-
-# Cache do frontend (opcional)
+# Frontend caches (caso use ferramentas modernas)
 frontend/.cache/
+
+# Netlify (ignora o cache de build)
+.netlify/
+
+# Render (evita subir config locais indevidas)
+*.render*
+
+# Outros
+.env.*.local
