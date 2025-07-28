@@ -2,13 +2,13 @@ services:
   - type: web
     name: rotatividade-backend
     env: node
-    region: oregon
     plan: free
+    region: oregon
     buildCommand: cd backend && npm install
-    startCommand: node server.js
-    rootDir: backend
+    startCommand: cd backend && node server.js
     envVars:
       - key: GOOGLE_CREDENTIALS_B64
         value: ${GOOGLE_CREDENTIALS_B64}
       - key: SHEET_ID
         value: ${SHEET_ID}
+    autoDeploy: true
