@@ -16,10 +16,10 @@ const corsOptions = {
   credentials: true,
 };
 
-app.use(cors(corsOptions));
-app.options('*', cors(corsOptions)); // preflight para qualquer rota
-
 app.use(express.json());
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
+
 
 // Rotas
 app.use('/api/rotatividade', rotatividadeRoutes);
