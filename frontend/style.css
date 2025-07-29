@@ -5,9 +5,18 @@ body {
   color: #333;
 }
 
+/* Estrutura dos cards */
+.card {
+  border: none;
+  border-radius: 0.75rem;
+}
+
 .card-header {
   font-weight: bold;
   font-size: 1.1rem;
+  border-top-left-radius: 0.75rem;
+  border-top-right-radius: 0.75rem;
+  box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.05);
 }
 
 /* Botão Gerar Rotatividade */
@@ -20,13 +29,13 @@ body {
   transform: scale(1.05);
 }
 
-/* Lottie container (centralizado e fluido) */
+/* Container do Lottie */
 #lottie {
   max-width: 100%;
   margin: auto;
 }
 
-/* Estilização para tabelas */
+/* Tabelas */
 .table th, .table td {
   vertical-align: middle;
   text-align: center;
@@ -41,7 +50,45 @@ body {
   h1 {
     font-size: 1.5rem;
   }
+
   .card-header {
     font-size: 1rem;
   }
+}
+
+/* Espaçamento entre as seções */
+section {
+  margin-bottom: 2rem;
+}
+
+/* Espaçamento entre botões CRUD */
+#atendentesContainer .btn,
+#solicitantesContainer .btn {
+  margin-left: 0.25rem;
+}
+
+/* Botões internos */
+button.btn-sm {
+  font-size: 0.8rem;
+}
+
+/* Suavidade nas animações */
+.fade-in {
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Centralização de conteúdo no container de quadros */
+#quadrosContainer {
+  text-align: center;
 }

@@ -24,7 +24,7 @@ function renderizarAtendentes() {
     container.innerHTML += gerarItemHTML(nome, i, 'atendente');
   });
   container.innerHTML += `<button class="btn btn-outline-primary w-100 mt-3" onclick="abrirModal('atendente', 'novo')">➕ Adicionar Atendente</button>`;
-  renderizarTabelaCruzada();
+  
 }
 
 function renderizarSolicitantes() {
@@ -34,7 +34,7 @@ function renderizarSolicitantes() {
     container.innerHTML += gerarItemHTML(nome, i, 'solicitante');
   });
   container.innerHTML += `<button class="btn btn-outline-success w-100 mt-3" onclick="abrirModal('solicitante', 'novo')">➕ Adicionar Solicitante</button>`;
-  renderizarTabelaCruzada();
+
 }
 
 function gerarItemHTML(nome, index, tipo) {
@@ -90,36 +90,6 @@ function excluirItem(index, tipo) {
   }
 }
 
-// -------------------- Tabela Cruzada --------------------
-
-function renderizarTabelaCruzada() {
-  const container = document.getElementById('tabelaCruzadaContainer');
-
-  if (atendentes.length === 0 || solicitantes.length === 0) {
-    container.innerHTML = `<p class="text-muted">Adicione ao menos um atendente e um solicitante para visualizar a tabela.</p>`;
-    return;
-  }
-
-  let html = '<div class="table-responsive"><table class="table table-bordered table-striped">';
-  html += '<thead><tr><th>Atendente \\ Solicitante</th>';
-
-  solicitantes.forEach(s => {
-    html += `<th>${s}</th>`;
-  });
-
-  html += '</tr></thead><tbody>';
-
-  atendentes.forEach((a) => {
-    html += `<tr><td><strong>${a}</strong></td>`;
-    solicitantes.forEach(() => {
-      html += `<td class="text-center">-</td>`;
-    });
-    html += '</tr>';
-  });
-
-  html += '</tbody></table></div>';
-  container.innerHTML = html;
-}
 
 // -------------------- Inicialização --------------------
 
@@ -248,6 +218,7 @@ function mostrarAnimacaoLottie(nomeArquivo) {
     path: `https://rotatividade-backend.onrender.com/animacoes/${nomeArquivo}`
   });
 }
+
 
 
 function contarSemanasDoMesAtual() {
