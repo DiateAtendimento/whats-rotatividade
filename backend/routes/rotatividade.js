@@ -1,12 +1,14 @@
 // routes/rotatividade.js
+
 const express = require('express');
 const router = express.Router();
 const {
   validarSenha,
   salvarLista,
   salvarRotatividade,
-  obterUltimaRotatividade
-} = require('../sheets'); // importa diretamente do sheets.js
+  obterUltimaRotatividade,
+  obterOrdemRotacionadaDeAtendentes // ✅ Nova função adicionada
+} = require('../sheets');
 
 // Rota para validar a senha
 router.post('/validar-senha', async (req, res) => {
@@ -50,6 +52,17 @@ router.get('/ultima-rotatividade', async (req, res) => {
   } catch (erro) {
     console.error('Erro ao obter última rotatividade:', erro);
     res.status(500).json({ ok: false, erro: 'Erro interno ao obter dados.' });
+  }
+});
+
+// ✅ Rota para obter nova ordem rotacionada de atendentes
+router.get('/nova-ordem', async (req, res) => {
+  try {
+    const novaOrdem = await obterOrdemRotacionadaDeAtendentes();
+    res.json({ ok: true, atendentes: novaOrdem });
+  } catch (erro) {
+    console.error('Erro ao obter nova ordem de atendentes:', erro);
+    res.status(500).json({ ok: false, erro: 'Erro ao gerar nova ordem.' });
   }
 });
 

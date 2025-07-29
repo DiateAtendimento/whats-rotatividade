@@ -117,9 +117,29 @@ async function obterUltimaRotatividade() {
   };
 }
 
+// Gera uma nova ordem rotacionada de atendentes
+async function obterOrdemRotacionadaDeAtendentes() {
+  await acessarPlanilha();
+  const aba = doc.sheetsByTitle['Atendentes'];
+  if (!aba) return ['Samara', 'Thayná', 'Mateus']; // ordem inicial
+
+  await aba.loadHeaderRow();
+  const linhas = await aba.getRows();
+  const nomes = linhas.map(row => row.Nome?.trim()).filter(Boolean);
+
+  if (nomes.length === 0) return ['Samara', 'Thayná', 'Mateus']; // fallback
+
+  // Rotaciona a ordem: [A, B, C] → [B, C, A]
+  const novaOrdem = nomes.slice(1).concat(nomes[0]);
+  return novaOrdem;
+}
+
+
 module.exports = {
   validarSenha,
   salvarLista,
   salvarRotatividade,
-  obterUltimaRotatividade
+  obterUltimaRotatividade,
+  obterOrdemRotacionadaDeAtendentes // 👈 nova exportação
 };
+

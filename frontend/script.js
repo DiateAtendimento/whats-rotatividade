@@ -4,7 +4,7 @@ const senhaModal = new bootstrap.Modal(document.getElementById('senhaModal'));
 const senhaInput = document.getElementById('senhaInput');
 const erroSenha = document.getElementById('erroSenha');
 
-let atendentes = ['Samara', 'Thayná', 'Mateus'];
+let atendentes = [];
 let solicitantes = ['Consultor', 'Contatos Novos', 'RPPS'];
 
 let tipoAtual = '';
@@ -14,8 +14,6 @@ let indexAtual = -1;
 const modal = new bootstrap.Modal(document.getElementById('crudModal'));
 const nomeInput = document.getElementById('nomeInput');
 const salvarBtn = document.getElementById('salvarBtn');
-
-// -------------------- CRUD --------------------
 
 function renderizarAtendentes() {
   const container = document.getElementById('atendentesContainer');
@@ -92,7 +90,6 @@ function excluirItem(index, tipo) {
 
 // -------------------- Inicialização --------------------
 
-renderizarAtendentes();
 renderizarSolicitantes();
 
 const container = document.getElementById('quadrosContainer');
@@ -130,8 +127,6 @@ if (cache) {
     .catch(err => console.error('❌ Erro ao buscar última rotatividade:', err));
 }
 
-// --------------------- Geração da Rotatividade ------------------
-
 document.getElementById('gerarRotatividadeBtn').addEventListener('click', () => {
   senhaInput.value = '';
   erroSenha.classList.add('d-none');
@@ -146,43 +141,17 @@ function gerarQuadrosSemanais() {
   const ano = now.getFullYear();
   const mes = now.toLocaleDateString('pt-BR', { month: 'long' });
 
-  container.innerHTML = `<h4 class="text-primary">📅 Referente a: ${mes} de ${ano}</h4>`;
-
   for (let semana = 0; semana < semanas; semana++) {
-    let html = `<h5 class="mt-4">📆 Semana ${semana + 1}</h5>`;
-    html += '<div class="table-responsive"><table class="table table-bordered">';
-    html += '<thead><tr><th>Solicitante</th><th>Atendente Responsável</th></tr></thead><tbody>';
-
     const semanaData = [];
-
     solicitantes.forEach((sol, i) => {
       const atendenteIndex = (i + semana) % totalAtendentes;
-      const atendente = atendentes[atendenteIndex];
-      html += `<tr><td>${sol}</td><td>${atendente}</td></tr>`;
-      semanaData.push({ solicitante: sol, atendente });
+      semanaData.push({ solicitante: sol, atendente: atendentes[atendenteIndex] });
     });
-
-    html += '</tbody></table></div>';
-    container.innerHTML += html;
     quadros.push(semanaData);
   }
 
   const dados = { atendentes, solicitantes, quadros, mes, ano, responsavel: 'admin' };
   localStorage.setItem('rotatividade', JSON.stringify(dados));
-
-  const feedbackDiv = document.createElement('div');
-  feedbackDiv.id = 'lottie-feedback';
-  feedbackDiv.className = 'text-center my-4';
-  feedbackDiv.style.height = '120px';
-  container.appendChild(feedbackDiv);
-
-  const anim = lottie.loadAnimation({
-    container: feedbackDiv,
-    renderer: 'svg',
-    loop: true,
-    autoplay: true,
-    path: 'https://rotatividade-backend.onrender.com/animacoes/loading.json'
-  });
 
   fetch(`${API_URL}/gerar-tabelas`, {
     method: 'POST',
@@ -191,32 +160,31 @@ function gerarQuadrosSemanais() {
   })
     .then(res => res.json())
     .then(res => {
-      anim.destroy();
       if (res.ok) {
-        lottie.loadAnimation({
-          container: feedbackDiv,
-          renderer: 'svg',
-          loop: false,
-          autoplay: true,
-          path: 'https://rotatividade-backend.onrender.com/animacoes/success-checkmark.json'
+        mostrarAnimacao('success-checkmark.json', () => {
+          exibirQuadros(quadros, mes, ano);
+          renderizarAtendentes();
         });
       } else {
-        mostrarAnimacaoErro(feedbackDiv);
+        mostrarAnimacao('error-cross.json');
       }
     })
     .catch(err => {
-      anim.destroy();
-      mostrarAnimacaoErro(feedbackDiv);
+      mostrarAnimacao('error-cross.json');
     });
 }
 
-function mostrarAnimacaoErro(container) {
-  lottie.loadAnimation({
-    container,
+function mostrarAnimacao(nomeArquivo, callback) {
+  container.innerHTML = '<div id="lottie" class="text-center my-4" style="height: 200px;"></div>';
+  const anim = lottie.loadAnimation({
+    container: document.getElementById('lottie'),
     renderer: 'svg',
     loop: false,
     autoplay: true,
-    path: 'https://rotatividade-backend.onrender.com/animacoes/error-cross.json'
+    path: `https://rotatividade-backend.onrender.com/animacoes/${nomeArquivo}`
+  });
+  anim.addEventListener('complete', () => {
+    if (callback) callback();
   });
 }
 
@@ -226,14 +194,10 @@ function contarSemanasDoMesAtual() {
   const mes = now.getMonth();
   const primeiroDia = new Date(ano, mes, 1);
   const ultimoDia = new Date(ano, mes + 1, 0);
-
   const diasNoMes = ultimoDia.getDate();
   const primeiraSemana = primeiroDia.getDay();
-
   return Math.ceil((primeiraSemana + diasNoMes) / 7);
 }
-
-// --------------------- Validação da senha ------------------
 
 document.getElementById('confirmarSenhaBtn').addEventListener('click', async () => {
   const senha = senhaInput.value.trim();
@@ -249,15 +213,21 @@ document.getElementById('confirmarSenhaBtn').addEventListener('click', async () 
 
   if (resultado.ok) {
     senhaModal.hide();
-    container.innerHTML = '<div id="lottie" class="text-center my-4" style="height: 200px;"></div>';
-    lottie.loadAnimation({
-      container: document.getElementById('lottie'),
-      renderer: 'svg',
-      loop: true,
-      autoplay: true,
-      path: 'https://rotatividade-backend.onrender.com/animacoes/loading.json'
-    });
-    setTimeout(() => gerarQuadrosSemanais(), 300);
+    mostrarAnimacao('loading.json');
+
+    // Busca nova ordem de atendentes
+    try {
+      const res = await fetch(`${API_URL}/nova-ordem`);
+      const dados = await res.json();
+      if (dados.ok && dados.atendentes.length) {
+        atendentes = dados.atendentes;
+        setTimeout(() => gerarQuadrosSemanais(), 800);
+      } else {
+        mostrarAnimacao('error-cross.json');
+      }
+    } catch (erro) {
+      mostrarAnimacao('error-cross.json');
+    }
   } else {
     erroSenha.classList.remove('d-none');
   }
