@@ -32,7 +32,6 @@ async function salvarLista(nomeAba, dados) {
   if (!aba) {
     aba = await doc.addSheet({ title: nomeAba, headerValues: ['Nome'] });
   } else {
-    // Se já existir, apenas apague as linhas mantendo o cabeçalho
     const linhas = await aba.getRows();
     for (const linha of linhas) await linha.delete();
   }
@@ -69,6 +68,10 @@ async function salvarRotatividade({ quadros, mes, ano, responsavel }) {
     });
   });
 
+  // Limpa todos os dados antigos da aba antes de salvar a nova rotatividade
+  const linhasAntigas = await aba.getRows();
+  for (const linha of linhasAntigas) await linha.delete();
+
   await aba.addRows(linhas);
 }
 
@@ -82,7 +85,6 @@ async function obterUltimaRotatividade() {
   const linhas = await abaRot.getRows();
   if (linhas.length === 0) return null;
 
-  // Agrupar por mês e ano e pegar o mais recente
   const agrupado = {};
   for (const linha of linhas) {
     const chave = `${linha['Ano']}-${linha['Mês']}`;
@@ -93,7 +95,6 @@ async function obterUltimaRotatividade() {
   const chavesOrdenadas = Object.keys(agrupado).sort().reverse();
   const maisRecente = agrupado[chavesOrdenadas[0]];
 
-  // Agrupar por semana
   const quadros = [];
   for (let i = 0; i < 5; i++) {
     const semana = `Semana ${i + 1}`;
@@ -110,7 +111,6 @@ async function obterUltimaRotatividade() {
 
   const ref = maisRecente[0];
 
-  // Carregar atendentes e solicitantes salvos
   const abaAtendentes = doc.sheetsByTitle['Atendentes'];
   const abaSolicitantes = doc.sheetsByTitle['Solicitantes'];
   await abaAtendentes?.loadHeaderRow();
@@ -131,30 +131,26 @@ async function obterUltimaRotatividade() {
   };
 }
 
-
 // Gera uma nova ordem rotacionada de atendentes
 async function obterOrdemRotacionadaDeAtendentes() {
   await acessarPlanilha();
   const aba = doc.sheetsByTitle['Atendentes'];
-  if (!aba) return ['Samara', 'Thayná', 'Mateus']; // ordem inicial
+  if (!aba) return ['Samara', 'Thayná', 'Mateus'];
 
   await aba.loadHeaderRow();
   const linhas = await aba.getRows();
   const nomes = linhas.map(row => row.Nome?.trim()).filter(Boolean);
 
-  if (nomes.length === 0) return ['Samara', 'Thayná', 'Mateus']; // fallback
+  if (nomes.length === 0) return ['Samara', 'Thayná', 'Mateus'];
 
-  // Rotaciona a ordem: [A, B, C] → [B, C, A]
   const novaOrdem = nomes.slice(1).concat(nomes[0]);
   return novaOrdem;
 }
-
 
 module.exports = {
   validarSenha,
   salvarLista,
   salvarRotatividade,
   obterUltimaRotatividade,
-  obterOrdemRotacionadaDeAtendentes // 👈 nova exportação
+  obterOrdemRotacionadaDeAtendentes
 };
-
