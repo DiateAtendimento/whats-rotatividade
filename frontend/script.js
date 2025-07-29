@@ -96,24 +96,46 @@ function excluirItem(index, tipo) {
 renderizarAtendentes();
 renderizarSolicitantes();
 
-// Carrega cache
+// --------------------Carrega cache ---------------------
+
+const container = document.getElementById('quadrosContainer');
 const cache = localStorage.getItem('rotatividade');
-if (cache) {
-  const { quadros, mes, ano } = JSON.parse(cache);
-  const container = document.getElementById('quadrosContainer');
+
+function exibirQuadros(quadros, mes, ano) {
   container.innerHTML = `<h4 class="text-primary">📅 Referente a: ${mes} de ${ano}</h4>`;
 
   quadros.forEach((semanaData, i) => {
     let html = `<h5 class="mt-4">📆 Semana ${i + 1}</h5>`;
     html += '<div class="table-responsive"><table class="table table-bordered">';
     html += '<thead><tr><th>Solicitante</th><th>Atendente Responsável</th></tr></thead><tbody>';
+
     semanaData.forEach(({ solicitante, atendente }) => {
       html += `<tr><td>${solicitante}</td><td>${atendente}</td></tr>`;
     });
+
     html += '</tbody></table></div>';
     container.innerHTML += html;
   });
 }
+
+if (cache) {
+  const { quadros, mes, ano } = JSON.parse(cache);
+  exibirQuadros(quadros, mes, ano);
+} else {
+  // Busca no backend a última rotatividade salva
+  fetch(`${API_URL}/ultima-rotatividade`)
+    .then(res => res.json())
+    .then(({ ok, dados }) => {
+      if (ok && dados) {
+        localStorage.setItem('rotatividade', JSON.stringify(dados));
+        exibirQuadros(dados.quadros, dados.mes, dados.ano);
+      }
+    })
+    .catch(err => {
+      console.error('❌ Erro ao buscar última rotatividade:', err);
+    });
+}
+
 
 // --------------------- Geração da Rotatividade ------------------
 
