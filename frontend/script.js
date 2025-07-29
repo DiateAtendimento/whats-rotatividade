@@ -17,6 +17,31 @@ const modal = new bootstrap.Modal(document.getElementById('crudModal'));
 const nomeInput = document.getElementById('nomeInput');
 const salvarBtn = document.getElementById('salvarBtn');
 
+async function carregarDadosIniciais() {
+  try {
+    const res = await fetch(`${API_URL}/ultima-rotatividade`);
+    const data = await res.json();
+
+    atendentes = data.atendentes;
+    solicitantes = data.solicitantes;
+
+    localStorage.setItem('atendentes', JSON.stringify(atendentes));
+    localStorage.setItem('solicitantes', JSON.stringify(solicitantes));
+
+    renderizarAtendentes();
+    renderizarSolicitantes();
+    renderizarQuadros(data.quadros, data.mes, data.ano);
+  } catch (error) {
+    console.error('Erro ao carregar dados iniciais:', error);
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  carregarDadosIniciais();
+});
+
+
+
 function renderizarAtendentes() {
   const container = document.getElementById('atendentesContainer');
   container.innerHTML = '';
@@ -155,21 +180,32 @@ function gerarQuadrosSemanais() {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(dados),
   })
-    .then(res => res.json())
-    .then(res => {
-      if (res.ok) {
-        mostrarAnimacao('success-checkmark.json', () => {
-          exibirQuadros(quadros, mes, ano);
-          renderizarAtendentes();
-        });
-      } else {
-        mostrarAnimacao('error-cross.json');
-      }
-    })
-    .catch(err => {
+  .then(res => res.json())
+  .then(async res => {
+    if (res.ok) {
+      // 🔄 Salva na aba Rotatividade
+      await fetch(`${API_URL}/salvar`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ quadros, mes, ano, responsavel: 'admin' })
+      });
+
+      mostrarAnimacao('success-checkmark.json', () => {
+        exibirQuadros(quadros, mes, ano);
+        renderizarAtendentes();
+      });
+    } else {
       mostrarAnimacao('error-cross.json');
-    });
+    }
+  })
+  .catch(err => {
+    mostrarAnimacao('error-cross.json');
+  });
+
+
 }
+
+
 
 function mostrarAnimacao(nomeArquivo, callback) {
   container.innerHTML = '<div id="lottie" class="text-center my-4" style="height: 200px;"></div>';
