@@ -1,5 +1,8 @@
+/* Tipografia e base */
 body {
   font-family: 'Segoe UI', sans-serif;
+  background-color: #f8f9fa;
+  color: #333;
 }
 
 .card-header {
@@ -7,10 +10,38 @@ body {
   font-size: 1.1rem;
 }
 
+/* Botão Gerar Rotatividade */
 #gerarRotatividadeBtn {
   transition: all 0.3s ease;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
 }
 
 #gerarRotatividadeBtn:hover {
   transform: scale(1.05);
+}
+
+/* Lottie container (centralizado e fluido) */
+#lottie {
+  max-width: 100%;
+  margin: auto;
+}
+
+/* Estilização para tabelas */
+.table th, .table td {
+  vertical-align: middle;
+  text-align: center;
+}
+
+.table thead {
+  background-color: #e9ecef;
+}
+
+/* Responsividade extra para mobile */
+@media (max-width: 576px) {
+  h1 {
+    font-size: 1.5rem;
+  }
+  .card-header {
+    font-size: 1rem;
+  }
 }

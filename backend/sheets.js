@@ -41,7 +41,6 @@ async function salvarLista(nomeAba, dados) {
   await aba.addRows(linhas);
 }
 
-
 // Salvar quadros semanais gerados
 async function salvarRotatividade({ quadros, mes, ano, responsavel }) {
   await acessarPlanilha();
@@ -73,8 +72,54 @@ async function salvarRotatividade({ quadros, mes, ano, responsavel }) {
   await aba.addRows(linhas);
 }
 
+// Obter última rotatividade salva
+async function obterUltimaRotatividade() {
+  await acessarPlanilha();
+  const aba = doc.sheetsByTitle['Rotatividade'];
+  if (!aba) return null;
+
+  await aba.loadHeaderRow();
+  const linhas = await aba.getRows();
+
+  if (linhas.length === 0) return null;
+
+  // Agrupar por mês e ano e pegar o mais recente
+  const agrupado = {};
+  for (const linha of linhas) {
+    const chave = `${linha['Ano']}-${linha['Mês']}`;
+    if (!agrupado[chave]) agrupado[chave] = [];
+    agrupado[chave].push(linha);
+  }
+
+  const chavesOrdenadas = Object.keys(agrupado).sort().reverse();
+  const maisRecente = agrupado[chavesOrdenadas[0]];
+
+  // Agrupar por semana
+  const quadros = [];
+  for (let i = 0; i < 5; i++) {
+    const semana = `Semana ${i + 1}`;
+    const dadosSemana = maisRecente.filter(l => l['Semana'] === semana);
+    if (dadosSemana.length > 0) {
+      quadros.push(
+        dadosSemana.map(l => ({
+          solicitante: l['Solicitante'],
+          atendente: l['Atendente']
+        }))
+      );
+    }
+  }
+
+  const ref = maisRecente[0];
+  return {
+    quadros,
+    mes: ref['Mês'],
+    ano: ref['Ano']
+  };
+}
+
 module.exports = {
   validarSenha,
   salvarLista,
-  salvarRotatividade
+  salvarRotatividade,
+  obterUltimaRotatividade
 };

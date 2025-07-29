@@ -1,4 +1,3 @@
-// backend/server.js
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
@@ -21,6 +20,9 @@ app.options('*', cors());
 // Middleware para JSON
 app.use(express.json());
 
+// Middleware estático para animações Lottie
+app.use('/animacoes', express.static('animacoes'));
+
 // Rotas
 app.use('/api/rotatividade', rotatividadeRoutes);
 
@@ -33,10 +35,7 @@ app.use((req, res) => {
   res.status(404).send('Rota não encontrada: ' + req.originalUrl);
 });
 
-
 // Inicia servidor
 app.listen(PORT, () => {
   console.log(`Servidor rodando em http://localhost:${PORT}`);
 });
-
-

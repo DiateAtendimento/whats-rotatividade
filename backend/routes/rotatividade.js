@@ -4,7 +4,8 @@ const router = express.Router();
 const {
   validarSenha,
   salvarLista,
-  salvarRotatividade
+  salvarRotatividade,
+  obterUltimaRotatividade
 } = require('../sheets'); // importa diretamente do sheets.js
 
 // Rota para validar a senha
@@ -23,7 +24,7 @@ router.post('/validar-senha', async (req, res) => {
 router.post('/gerar-tabelas', async (req, res) => {
   const { atendentes, solicitantes, quadros, mes, ano, responsavel } = req.body;
   try {
-    // Salva lista de nomes (opcional)
+    // Salva lista de nomes
     await salvarLista('Atendentes', atendentes);
     await salvarLista('Solicitantes', solicitantes);
 
@@ -34,6 +35,21 @@ router.post('/gerar-tabelas', async (req, res) => {
   } catch (erro) {
     console.error('Erro ao salvar dados da rotatividade:', erro);
     res.status(500).json({ ok: false, erro: 'Erro interno ao salvar dados.' });
+  }
+});
+
+// Rota para obter a última rotatividade salva
+router.get('/ultima-rotatividade', async (req, res) => {
+  try {
+    const dados = await obterUltimaRotatividade();
+    if (dados) {
+      res.json({ ok: true, dados });
+    } else {
+      res.json({ ok: false, erro: 'Nenhuma rotatividade encontrada.' });
+    }
+  } catch (erro) {
+    console.error('Erro ao obter última rotatividade:', erro);
+    res.status(500).json({ ok: false, erro: 'Erro interno ao obter dados.' });
   }
 });
 
