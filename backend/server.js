@@ -1,6 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const path = require('path');
 const rotatividadeRoutes = require('./routes/rotatividade');
 
 const app = express();
@@ -21,7 +22,8 @@ app.options('*', cors());
 app.use(express.json());
 
 // Middleware estático para animações Lottie
-app.use('/animacoes', express.static('animacoes'));
+app.use('/animacoes', express.static(path.join(__dirname, 'animacoes')));
+
 
 // Rotas
 app.use('/api/rotatividade', rotatividadeRoutes);
