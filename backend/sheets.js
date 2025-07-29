@@ -75,11 +75,11 @@ async function salvarRotatividade({ quadros, mes, ano, responsavel }) {
 // Obter última rotatividade salva
 async function obterUltimaRotatividade() {
   await acessarPlanilha();
-  const aba = doc.sheetsByTitle['Rotatividade'];
-  if (!aba) return null;
+  const abaRot = doc.sheetsByTitle['Rotatividade'];
+  if (!abaRot) return null;
 
-  await aba.loadHeaderRow();
-  const linhas = await aba.getRows();
+  await abaRot.loadHeaderRow();
+  const linhas = await abaRot.getRows();
   if (linhas.length === 0) return null;
 
   // Agrupar por mês e ano e pegar o mais recente
@@ -95,32 +95,39 @@ async function obterUltimaRotatividade() {
 
   // Agrupar por semana
   const quadros = [];
-  const atendentesSet = new Set();
-  const solicitantesSet = new Set();
-
   for (let i = 0; i < 5; i++) {
     const semana = `Semana ${i + 1}`;
     const dadosSemana = maisRecente.filter(l => l['Semana'] === semana);
     if (dadosSemana.length > 0) {
-      const semanaData = dadosSemana.map(l => {
-        atendentesSet.add(l['Atendente']);
-        solicitantesSet.add(l['Solicitante']);
-        return {
+      quadros.push(
+        dadosSemana.map(l => ({
           solicitante: l['Solicitante'],
           atendente: l['Atendente']
-        };
-      });
-      quadros.push(semanaData);
+        }))
+      );
     }
   }
 
   const ref = maisRecente[0];
+
+  // Carregar atendentes e solicitantes salvos
+  const abaAtendentes = doc.sheetsByTitle['Atendentes'];
+  const abaSolicitantes = doc.sheetsByTitle['Solicitantes'];
+  await abaAtendentes?.loadHeaderRow();
+  await abaSolicitantes?.loadHeaderRow();
+
+  const atendentesRows = await abaAtendentes?.getRows() || [];
+  const solicitantesRows = await abaSolicitantes?.getRows() || [];
+
+  const atendentes = atendentesRows.map(r => r['Nome']?.trim()).filter(Boolean);
+  const solicitantes = solicitantesRows.map(r => r['Nome']?.trim()).filter(Boolean);
+
   return {
     quadros,
     mes: ref['Mês'],
     ano: ref['Ano'],
-    atendentes: Array.from(atendentesSet),
-    solicitantes: Array.from(solicitantesSet)
+    atendentes,
+    solicitantes
   };
 }
 
