@@ -1,3 +1,5 @@
+// ✅ script.js corrigido
+
 const API_URL = 'https://rotatividade-backend.onrender.com/api/rotatividade';
 
 const senhaModal = new bootstrap.Modal(document.getElementById('senhaModal'));
@@ -5,7 +7,7 @@ const senhaInput = document.getElementById('senhaInput');
 const erroSenha = document.getElementById('erroSenha');
 
 let atendentes = [];
-let solicitantes = ['Consultor', 'Contatos Novos', 'RPPS'];
+let solicitantes = [];
 
 let tipoAtual = '';
 let modo = '';
@@ -50,7 +52,8 @@ function abrirModal(tipo, acao, index = -1) {
   modo = acao;
   indexAtual = index;
 
-  nomeInput.value = (modo === 'editar') ? (tipo === 'atendente' ? atendentes[index] : solicitantes[index]) : '';
+  const lista = tipo === 'atendente' ? atendentes : solicitantes;
+  nomeInput.value = (modo === 'editar') ? lista[index] : '';
   document.getElementById('crudModalLabel').textContent =
     `${modo === 'novo' ? 'Adicionar' : 'Editar'} ${tipo === 'atendente' ? 'Atendente' : 'Solicitante'}`;
   salvarBtn.textContent = modo === 'novo' ? 'Adicionar' : 'Salvar';
@@ -88,12 +91,7 @@ function excluirItem(index, tipo) {
   }
 }
 
-// -------------------- Inicialização --------------------
-
-renderizarSolicitantes();
-
 const container = document.getElementById('quadrosContainer');
-const cache = localStorage.getItem('rotatividade');
 
 function exibirQuadros(quadros, mes, ano) {
   container.innerHTML = `<h4 class="text-primary">📅 Referente a: ${mes} de ${ano}</h4>`;
@@ -112,28 +110,19 @@ function exibirQuadros(quadros, mes, ano) {
   });
 }
 
-if (cache) {
-  const { atendentes: a, solicitantes: s, quadros, mes, ano } = JSON.parse(cache);
-  atendentes = a;
-  solicitantes = s;
-  renderizarAtendentes();
-  renderizarSolicitantes();
-  exibirQuadros(quadros, mes, ano);
-} else {
-  fetch(`${API_URL}/ultima-rotatividade`)
-    .then(res => res.json())
-    .then(({ ok, dados }) => {
-      if (ok && dados) {
-        localStorage.setItem('rotatividade', JSON.stringify(dados));
-        atendentes = dados.atendentes;
-        solicitantes = dados.solicitantes;
-        renderizarAtendentes();
-        renderizarSolicitantes();
-        exibirQuadros(dados.quadros, dados.mes, dados.ano);
-      }
-    })
-    .catch(err => console.error('❌ Erro ao buscar última rotatividade:', err));
-}
+fetch(`${API_URL}/ultima-rotatividade`)
+  .then(res => res.json())
+  .then(({ ok, dados }) => {
+    if (ok && dados) {
+      localStorage.setItem('rotatividade', JSON.stringify(dados));
+      atendentes = dados.atendentes;
+      solicitantes = dados.solicitantes;
+      renderizarAtendentes();
+      renderizarSolicitantes();
+      exibirQuadros(dados.quadros, dados.mes, dados.ano);
+    }
+  })
+  .catch(err => console.error('❌ Erro ao buscar última rotatividade:', err));
 
 document.getElementById('gerarRotatividadeBtn').addEventListener('click', () => {
   senhaInput.value = '';
@@ -223,7 +212,6 @@ document.getElementById('confirmarSenhaBtn').addEventListener('click', async () 
     senhaModal.hide();
     mostrarAnimacao('loading.json');
 
-    // Busca nova ordem de atendentes
     try {
       const res = await fetch(`${API_URL}/nova-ordem`);
       const dados = await res.json();

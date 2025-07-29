@@ -33,10 +33,15 @@ body {
 #lottie {
   max-width: 100%;
   margin: auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 200px;
 }
 
 /* Tabelas */
-.table th, .table td {
+.table th,
+.table td {
   vertical-align: middle;
   text-align: center;
 }
@@ -56,7 +61,7 @@ body {
   }
 }
 
-/* Espaçamento entre as seções */
+/* Espaçamento entre seções */
 section {
   margin-bottom: 2rem;
 }
@@ -88,7 +93,17 @@ button.btn-sm {
   }
 }
 
-/* Centralização de conteúdo no container de quadros */
+/* Centralização e visual dos quadros */
 #quadrosContainer {
   text-align: center;
+}
+
+/* Feedback de erro no campo de senha */
+#erroSenha {
+  font-size: 0.9rem;
+}
+
+/* Estilo para input inválido */
+input.is-invalid {
+  border-color: #dc3545;
 }
