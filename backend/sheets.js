@@ -80,7 +80,6 @@ async function obterUltimaRotatividade() {
 
   await aba.loadHeaderRow();
   const linhas = await aba.getRows();
-
   if (linhas.length === 0) return null;
 
   // Agrupar por mês e ano e pegar o mais recente
@@ -96,16 +95,22 @@ async function obterUltimaRotatividade() {
 
   // Agrupar por semana
   const quadros = [];
+  const atendentesSet = new Set();
+  const solicitantesSet = new Set();
+
   for (let i = 0; i < 5; i++) {
     const semana = `Semana ${i + 1}`;
     const dadosSemana = maisRecente.filter(l => l['Semana'] === semana);
     if (dadosSemana.length > 0) {
-      quadros.push(
-        dadosSemana.map(l => ({
+      const semanaData = dadosSemana.map(l => {
+        atendentesSet.add(l['Atendente']);
+        solicitantesSet.add(l['Solicitante']);
+        return {
           solicitante: l['Solicitante'],
           atendente: l['Atendente']
-        }))
-      );
+        };
+      });
+      quadros.push(semanaData);
     }
   }
 
@@ -113,9 +118,12 @@ async function obterUltimaRotatividade() {
   return {
     quadros,
     mes: ref['Mês'],
-    ano: ref['Ano']
+    ano: ref['Ano'],
+    atendentes: Array.from(atendentesSet),
+    solicitantes: Array.from(solicitantesSet)
   };
 }
+
 
 // Gera uma nova ordem rotacionada de atendentes
 async function obterOrdemRotacionadaDeAtendentes() {

@@ -113,7 +113,11 @@ function exibirQuadros(quadros, mes, ano) {
 }
 
 if (cache) {
-  const { quadros, mes, ano } = JSON.parse(cache);
+  const { atendentes: a, solicitantes: s, quadros, mes, ano } = JSON.parse(cache);
+  atendentes = a;
+  solicitantes = s;
+  renderizarAtendentes();
+  renderizarSolicitantes();
   exibirQuadros(quadros, mes, ano);
 } else {
   fetch(`${API_URL}/ultima-rotatividade`)
@@ -121,6 +125,10 @@ if (cache) {
     .then(({ ok, dados }) => {
       if (ok && dados) {
         localStorage.setItem('rotatividade', JSON.stringify(dados));
+        atendentes = dados.atendentes;
+        solicitantes = dados.solicitantes;
+        renderizarAtendentes();
+        renderizarSolicitantes();
         exibirQuadros(dados.quadros, dados.mes, dados.ano);
       }
     })
