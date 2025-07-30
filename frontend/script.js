@@ -16,13 +16,17 @@ let tipoAtual    = '';
 let modoAtual    = '';
 let idxAtual     = -1;
 
-// —— Atalho Enter no modal de senha
+// — Atalho Enter no modal de senha
 senhaInput.addEventListener('keypress', e => {
   if (e.key === 'Enter') document.getElementById('confirmarSenhaBtn').click();
 });
 
-// —— Helper para persistir as listas no servidor
+// — Helper para deduplicar e enviar listas ao servidor
 async function persistirListas() {
+  // dedupe local antes de salvar
+  atendentes   = [...new Set(atendentes.map(n => n.trim()))];
+  solicitantes = [...new Set(solicitantes.map(n => n.trim()))];
+
   try {
     await fetch(`${API_URL}/listas`, {
       method: 'POST',
@@ -34,12 +38,12 @@ async function persistirListas() {
   }
 }
 
-// —— Carrega listas + última rotatividade
+// — Carrega listas + última rotatividade
 async function carregarDadosIniciais() {
   mostrarAnimacao('list-loaded.json');
   try {
     // 1) Buscar listas
-    const listasRes = await fetch(`${API_URL}/listas`);
+    const listasRes  = await fetch(`${API_URL}/listas`);
     const listasJson = await listasRes.json();
     if (listasJson.ok) {
       atendentes   = listasJson.atendentes;
@@ -65,7 +69,7 @@ async function carregarDadosIniciais() {
 
 document.addEventListener('DOMContentLoaded', carregarDadosIniciais);
 
-// —— Fluxo de geração protegido por senha
+// —– Fluxo de geração protegido por senha
 document.getElementById('gerarRotatividadeBtn').addEventListener('click', () => {
   senhaInput.value = '';
   erroSenha.classList.add('d-none');
@@ -76,7 +80,7 @@ document.getElementById('confirmarSenhaBtn').addEventListener('click', async () 
   const senha = senhaInput.value.trim();
   if (!senha) return;
 
-  const res = await fetch(`${API_URL}/validar-senha`, {
+  const res  = await fetch(`${API_URL}/validar-senha`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ senha })
@@ -91,21 +95,17 @@ document.getElementById('confirmarSenhaBtn').addEventListener('click', async () 
   senhaModal.hide();
   mostrarAnimacao('loading.json');
 
-  // 1) obter nova ordem de atendentes
-  const ordemRes = await fetch(`${API_URL}/nova-ordem`);
+  const ordemRes  = await fetch(`${API_URL}/nova-ordem`);
   const ordemJson = await ordemRes.json();
   if (!ordemJson.ok) {
     mostrarAnimacao('error-cross.json');
     return;
   }
   atendentes = ordemJson.atendentes;
-
-  // 2) gerar e salvar rotatividade
   setTimeout(gerarESalvarQuadros, 800);
 });
 
-
-// —— Gera quadros, salva no servidor e renderiza
+// —– Geração de quadros + persistência
 async function gerarESalvarQuadros() {
   if (!atendentes.length || !solicitantes.length) {
     mostrarAnimacao('error-cross.json');
@@ -113,26 +113,25 @@ async function gerarESalvarQuadros() {
     return;
   }
 
-  const semanas      = contarSemanasDoMesAtual();
-  const totalAt      = atendentes.length;
-  const quadros      = [];
-  const now          = new Date();
-  const ano          = now.getFullYear();
-  const mes          = now.toLocaleDateString('pt-BR', { month: 'long' });
-  const responsavel  = 'admin';
+  const semanas     = contarSemanasDoMesAtual();
+  const totalAt     = atendentes.length;
+  const quadros     = [];
+  const now         = new Date();
+  const ano         = now.getFullYear();
+  const mes         = now.toLocaleDateString('pt-BR', { month: 'long' });
+  const responsavel = 'admin';
 
   for (let s = 0; s < semanas; s++) {
-    const arr = solicitantes.map((sol, i) => ({
-      solicitante: sol,
-      atendente:   atendentes[(i + s) % totalAt]
-    }));
-    quadros.push(arr);
+    quadros.push(
+      solicitantes.map((sol, i) => ({
+        solicitante: sol,
+        atendente:   atendentes[(i + s) % totalAt]
+      }))
+    );
   }
 
   const payload = { atendentes, solicitantes, quadros, mes, ano, responsavel };
-
-  // chama rota de salvar rotatividade
-  const salvarRes = await fetch(`${API_URL}/salvar`, {
+  const salvarRes  = await fetch(`${API_URL}/salvar`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload)
@@ -151,22 +150,22 @@ async function gerarESalvarQuadros() {
   }
 }
 
-// —— Renderização dos quadros
+// —– Renderização de quadros
 function renderizarQuadros(quadros, mes, ano) {
   quadrosEl.innerHTML = `<h4 class="text-primary">📅 Referente a: ${mes} de ${ano}</h4>`;
   quadros.forEach((sem, i) => {
     let html = `<h5 class="mt-4">📆 Semana ${i+1}</h5>`;
     html += `<div class="table-responsive"><table class="table table-bordered">
-               <thead><tr><th>Solicitante</th><th>Atendente Responsável</th></tr></thead><tbody>`;
-    sem.forEach(row => {
-      html += `<tr><td>${row.solicitante}</td><td>${row.atendente}</td></tr>`;
+               <thead><tr><th>Solicitante</th><th>Atendente</th></tr></thead><tbody>`;
+    sem.forEach(r => {
+      html += `<tr><td>${r.solicitante}</td><td>${r.atendente}</td></tr>`;
     });
     html += '</tbody></table></div>';
     quadrosEl.innerHTML += html;
   });
 }
 
-// —— CRUD de listas
+// —– CRUD de listas
 function renderizarAtendentes() {
   const c = document.getElementById('atendentesContainer');
   c.innerHTML = '';
@@ -182,34 +181,37 @@ function renderizarSolicitantes() {
 }
 
 function gerarItem(nome, tipo, i) {
-  return `<div class="d-flex justify-content-between align-items-center mb-2">
-            <span>${nome}</span>
-            <div>
-              <button class="btn btn-sm btn-warning me-1" onclick="abrirModal('${tipo}','editar',${i})">✏️</button>
-              <button class="btn btn-sm btn-danger" onclick="excluirItem(${i},'${tipo}')">🗑️</button>
-            </div>
-          </div>`;
+  return `
+    <div class="d-flex justify-content-between align-items-center mb-2">
+      <span>${nome}</span>
+      <div>
+        <button class="btn btn-sm btn-warning me-1" onclick="abrirModal('${tipo}','editar',${i})">✏️</button>
+        <button class="btn btn-sm btn-danger" onclick="excluirItem(${i},'${tipo}')">🗑️</button>
+      </div>
+    </div>`;
 }
 
 function abrirModal(tipo, modo, i = -1) {
   tipoAtual = tipo;
   modoAtual = modo;
-  idxAtual = i;
+  idxAtual  = i;
   nomeInput.value = modo === 'editar'
     ? (tipo === 'atendente' ? atendentes[i] : solicitantes[i])
     : '';
-  document.getElementById('crudModalLabel').textContent = `${modo==='novo'?'Adicionar':'Editar'} ${tipo==='atendente'?'Atendente':'Solicitante'}`;
+  document.getElementById('crudModalLabel').textContent = 
+    `${modo==='novo'?'Adicionar':'Editar'} ${tipo==='atendente'?'Atendente':'Solicitante'}`;
   salvarBtn.textContent = modo === 'novo' ? 'Adicionar' : 'Salvar';
   nomeModal.show();
 }
 
-// —— Listener de Salvar (CRUD) com persistência
+// —– Salvar (CRUD) com persistência
 salvarBtn.addEventListener('click', async () => {
   const nome = nomeInput.value.trim().replace(/\s+/g, ' ');
   if (!nome) {
     nomeInput.classList.add('is-invalid');
     return;
   }
+
   const lista = tipoAtual === 'atendente' ? atendentes : solicitantes;
   const existe = lista.some((n, idx) => idx !== idxAtual && n.toLowerCase() === nome.toLowerCase());
   if (existe) {
@@ -231,18 +233,19 @@ salvarBtn.addEventListener('click', async () => {
   mostrarToast('✅ Alteração salva!');
 });
 
-// —— Exclusão com persistência
-function excluirItem(i, tipo) {
+// —– Exclusão (CRUD) com persistência
+async function excluirItem(i, tipo) {
   const lista = tipo === 'atendente' ? atendentes : solicitantes;
   if (!confirm(`Excluir "${lista[i]}"?`)) return;
 
   lista.splice(i, 1);
-  persistirListas();
+  await persistirListas();
   if (tipo === 'atendente') renderizarAtendentes();
-  else renderizarSolicitantes();
+  else                       renderizarSolicitantes();
+  mostrarToast('🗑️ Item excluído');
 }
 
-// —— Helpers visuais e utilitários
+// —– Helpers visuais
 function mostrarToast(msg) {
   const t = document.getElementById('toastSucesso');
   t.querySelector('.toast-body').textContent = msg;
@@ -270,6 +273,6 @@ function contarSemanasDoMesAtual() {
   const now = new Date();
   const ano = now.getFullYear(), mes = now.getMonth();
   const primeiro = new Date(ano, mes, 1).getDay();
-  const qtdDias = new Date(ano, mes + 1, 0).getDate();
-  return Math.ceil((primeiro + qtdDias) / 7);
+  const dias     = new Date(ano, mes + 1, 0).getDate();
+  return Math.ceil((primeiro + dias) / 7);
 }
