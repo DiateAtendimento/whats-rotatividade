@@ -1,5 +1,3 @@
-// routes/rotatividade.js
-
 const express = require('express');
 const router = express.Router();
 const {
@@ -7,7 +5,7 @@ const {
   salvarLista,
   salvarRotatividade,
   obterUltimaRotatividade,
-  obterOrdemRotacionadaDeAtendentes // ✅ Nova função adicionada
+  obterOrdemRotacionadaDeAtendentes
 } = require('../sheets');
 
 // Rota para validar a senha
@@ -22,21 +20,27 @@ router.post('/validar-senha', async (req, res) => {
   }
 });
 
-// Rota para salvar dados da rotatividade
+// Rota para gerar quadros (sem salvar listas)
 router.post('/gerar-tabelas', async (req, res) => {
-  const { atendentes, solicitantes, quadros, mes, ano, responsavel } = req.body;
+  const { quadros, mes, ano, responsavel } = req.body;
   try {
-    // Salva lista de nomes
-    await salvarLista('Atendentes', atendentes);
-    await salvarLista('Solicitantes', solicitantes);
-
-    // Salva rotatividade
-    await salvarRotatividade({ quadros, mes, ano, responsavel });
-
+    // Apenas retorna ok; o salvamento dos quadros será feito na rota /salvar
     res.json({ ok: true });
   } catch (erro) {
-    console.error('Erro ao salvar dados da rotatividade:', erro);
-    res.status(500).json({ ok: false, erro: 'Erro interno ao salvar dados.' });
+    console.error('Erro ao gerar quadros:', erro);
+    res.status(500).json({ ok: false, erro: 'Erro interno ao gerar quadros.' });
+  }
+});
+
+// ✅ Nova rota para salvar rotatividade
+router.post('/salvar', async (req, res) => {
+  const { quadros, mes, ano, responsavel } = req.body;
+  try {
+    await salvarRotatividade({ quadros, mes, ano, responsavel });
+    res.json({ ok: true });
+  } catch (erro) {
+    console.error('Erro ao salvar rotatividade:', erro);
+    res.status(500).json({ ok: false, erro: 'Erro ao salvar quadros na aba Rotatividade.' });
   }
 });
 
@@ -55,7 +59,7 @@ router.get('/ultima-rotatividade', async (req, res) => {
   }
 });
 
-// ✅ Rota para obter nova ordem rotacionada de atendentes
+// Rota para obter nova ordem rotacionada de atendentes
 router.get('/nova-ordem', async (req, res) => {
   try {
     const novaOrdem = await obterOrdemRotacionadaDeAtendentes();
