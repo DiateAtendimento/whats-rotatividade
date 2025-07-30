@@ -72,12 +72,14 @@ router.get('/listas', async (req, res) => {
   try {
     const atendentes   = await obterLista('Atendentes');
     const solicitantes = await obterLista('Solicitantes');
-    res.json({ ok: true, atendentes, solicitantes });
+    return res.json({ ok: true, atendentes, solicitantes });
   } catch (erro) {
-    console.error('Erro ao obter listas:', erro);
-    res.status(500).json({ ok: false, erro: 'Erro interno ao obter listas.' });
+    console.error('❌ ERRO /listas:', erro);
+    // envia também a mensagem para o front (só para debugging)
+    return res.status(500).json({ ok: false, erro: erro.message });
   }
 });
+
 
 // **Nova rota** para **salvar** as listas no Sheets
 router.post('/listas', async (req, res) => {
