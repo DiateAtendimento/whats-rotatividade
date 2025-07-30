@@ -6,8 +6,22 @@ const senhaModal = new bootstrap.Modal(document.getElementById('senhaModal'));
 const senhaInput = document.getElementById('senhaInput');
 const erroSenha = document.getElementById('erroSenha');
 
-let atendentes = JSON.parse(localStorage.getItem('atendentes')) || [];
-let solicitantes = JSON.parse(localStorage.getItem('solicitantes')) || [];
+let atendentes = [];
+try {
+  const raw = localStorage.getItem('atendentes');
+  atendentes = raw ? JSON.parse(raw) : [];
+} catch (e) {
+  atendentes = [];
+}
+
+let solicitantes = [];
+try {
+  const raw = localStorage.getItem('solicitantes');
+  solicitantes = raw ? JSON.parse(raw) : [];
+} catch (e) {
+  solicitantes = [];
+}
+
 
 let tipoAtual = '';
 let modo = '';
@@ -17,6 +31,8 @@ const modal = new bootstrap.Modal(document.getElementById('crudModal'));
 const nomeInput = document.getElementById('nomeInput');
 const salvarBtn = document.getElementById('salvarBtn');
 const container = document.getElementById('quadrosContainer');
+
+
 
 // 🔁 CRUD sempre visível ao carregar
 renderizarAtendentes();
