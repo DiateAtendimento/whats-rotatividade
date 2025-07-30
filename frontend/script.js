@@ -31,9 +31,6 @@ const nomeInput = document.getElementById('nomeInput');
 const salvarBtn = document.getElementById('salvarBtn');
 const container = document.getElementById('quadrosContainer');
 
-// 🔁 CRUD sempre visível ao carregar
-renderizarAtendentes();
-renderizarSolicitantes();
 
 senhaInput.addEventListener('keypress', (e) => {
   if (e.key === 'Enter') {
