@@ -1,4 +1,4 @@
-// ✅ script.js 
+// script.js atualizado com correções e melhorias
 
 const API_URL = 'https://rotatividade-backend.onrender.com/api/rotatividade';
 
@@ -16,30 +16,45 @@ let indexAtual = -1;
 const modal = new bootstrap.Modal(document.getElementById('crudModal'));
 const nomeInput = document.getElementById('nomeInput');
 const salvarBtn = document.getElementById('salvarBtn');
+const container = document.getElementById('quadrosContainer');
 
-function carregarDadosIniciais() {
+async function carregarDadosIniciais() {
   mostrarAnimacao('list-loaded.json');
 
-  fetch(`${API_URL}/ultima-rotatividade`)
-    .then(res => res.json())
-    .then(data => {
-      atendentes = data.atendentes;
-      solicitantes = data.solicitantes;
-      localStorage.setItem('atendentes', JSON.stringify(atendentes));
-      localStorage.setItem('solicitantes', JSON.stringify(solicitantes));
-      renderizarAtendentes();
-      renderizarSolicitantes();
-      renderizarQuadros(data.quadros, data.mes, data.ano);
-    })
-    .catch(error => console.error('Erro ao carregar dados iniciais:', error));
-}
+  try {
+    const res = await fetch(`${API_URL}/ultima-rotatividade`);
+    const data = await res.json();
 
+    if (!data.ok || !data.dados) {
+      container.innerHTML = `<p class="text-muted mt-3">Nenhum quadro de rotatividade foi gerado ainda.</p>`;
+      return;
+    }
+
+    const { atendentes: a, solicitantes: s, quadros, mes, ano } = data.dados;
+    atendentes = a;
+    solicitantes = s;
+
+    localStorage.setItem('atendentes', JSON.stringify(atendentes));
+    localStorage.setItem('solicitantes', JSON.stringify(solicitantes));
+
+    renderizarAtendentes();
+    renderizarSolicitantes();
+    renderizarQuadros(quadros, mes, ano);
+  } catch (error) {
+    console.error('Erro ao carregar dados iniciais:', error);
+    container.innerHTML = `<p class="text-danger">Erro ao carregar os dados.</p>`;
+  }
+}
 
 document.addEventListener('DOMContentLoaded', () => {
   carregarDadosIniciais();
 });
 
-
+senhaInput.addEventListener('keypress', (e) => {
+  if (e.key === 'Enter') {
+    document.getElementById('confirmarSenhaBtn').click();
+  }
+});
 
 function renderizarAtendentes() {
   const container = document.getElementById('atendentesContainer');
@@ -117,7 +132,6 @@ function salvarNome() {
   mostrarToast('✅ Alterações salvas com sucesso!');
 }
 
-
 function excluirItem(index, tipo) {
   const lista = tipo === 'atendente' ? atendentes : solicitantes;
   if (confirm(`Deseja realmente excluir "${lista[index]}"?`)) {
@@ -126,9 +140,7 @@ function excluirItem(index, tipo) {
   }
 }
 
-const container = document.getElementById('quadrosContainer');
-
-function exibirQuadros(quadros, mes, ano) {
+function renderizarQuadros(quadros, mes, ano) {
   container.innerHTML = `<h4 class="text-primary">📅 Referente a: ${mes} de ${ano}</h4>`;
 
   quadros.forEach((semanaData, i) => {
@@ -145,24 +157,43 @@ function exibirQuadros(quadros, mes, ano) {
   });
 }
 
-fetch(`${API_URL}/ultima-rotatividade`)
-  .then(res => res.json())
-  .then(({ ok, dados }) => {
-    if (ok && dados) {
-      localStorage.setItem('rotatividade', JSON.stringify(dados));
-      atendentes = dados.atendentes;
-      solicitantes = dados.solicitantes;
-      renderizarAtendentes();
-      renderizarSolicitantes();
-      exibirQuadros(dados.quadros, dados.mes, dados.ano);
-    }
-  })
-  .catch(err => console.error('❌ Erro ao buscar última rotatividade:', err));
-
 document.getElementById('gerarRotatividadeBtn').addEventListener('click', () => {
   senhaInput.value = '';
   erroSenha.classList.add('d-none');
   senhaModal.show();
+});
+
+document.getElementById('confirmarSenhaBtn').addEventListener('click', async () => {
+  const senha = senhaInput.value.trim();
+  if (!senha) return;
+
+  const resposta = await fetch(`${API_URL}/validar-senha`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ senha }),
+  });
+
+  const resultado = await resposta.json();
+
+  if (resultado.ok) {
+    senhaModal.hide();
+    mostrarAnimacao('loading.json');
+
+    try {
+      const res = await fetch(`${API_URL}/nova-ordem`);
+      const dados = await res.json();
+      if (dados.ok && Array.isArray(dados.atendentes)) {
+        atendentes = dados.atendentes;
+        setTimeout(() => gerarQuadrosSemanais(), 800);
+      } else {
+        mostrarAnimacao('error-cross.json');
+      }
+    } catch (erro) {
+      mostrarAnimacao('error-cross.json');
+    }
+  } else {
+    erroSenha.classList.remove('d-none');
+  }
 });
 
 function gerarQuadrosSemanais() {
@@ -190,31 +221,25 @@ function gerarQuadrosSemanais() {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(dados),
   })
-  .then(res => res.json())
-  .then(async res => {
-    if (res.ok) {
-      // 🔄 Salva na aba Rotatividade
-      await fetch(`${API_URL}/salvar`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ quadros, mes, ano, responsavel: 'admin' })
-      });
+    .then(res => res.json())
+    .then(async res => {
+      if (res.ok) {
+        await fetch(`${API_URL}/salvar`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ quadros, mes, ano, responsavel: 'admin' })
+        });
 
-      mostrarAnimacao('success-checkmark.json', () => {
-        exibirQuadros(quadros, mes, ano);
-        renderizarAtendentes();
-      });
-    } else {
-      mostrarAnimacao('error-cross.json');
-    }
-  })
-  .catch(err => {
-    mostrarAnimacao('error-cross.json');
-  });
-
-
+        mostrarAnimacao('success-checkmark.json', () => {
+          renderizarQuadros(quadros, mes, ano);
+          renderizarAtendentes();
+        });
+      } else {
+        mostrarAnimacao('error-cross.json');
+      }
+    })
+    .catch(() => mostrarAnimacao('error-cross.json'));
 }
-
 
 function mostrarAnimacao(nomeArquivo, callback) {
   const btn = document.getElementById('gerarRotatividadeBtn');
@@ -234,7 +259,6 @@ function mostrarAnimacao(nomeArquivo, callback) {
   });
 }
 
-
 function contarSemanasDoMesAtual() {
   const now = new Date();
   const ano = now.getFullYear();
@@ -245,39 +269,6 @@ function contarSemanasDoMesAtual() {
   const primeiraSemana = primeiroDia.getDay();
   return Math.ceil((primeiraSemana + diasNoMes) / 7);
 }
-
-document.getElementById('confirmarSenhaBtn').addEventListener('click', async () => {
-  const senha = senhaInput.value.trim();
-  if (!senha) return;
-
-  const resposta = await fetch(`${API_URL}/validar-senha`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ senha }),
-  });
-
-  const resultado = await resposta.json();
-
-  if (resultado.ok) {
-    senhaModal.hide();
-    mostrarAnimacao('loading.json');
-
-    try {
-      const res = await fetch(`${API_URL}/nova-ordem`);
-      const dados = await res.json();
-      if (dados.ok && dados.atendentes.length) {
-        atendentes = dados.atendentes;
-        setTimeout(() => gerarQuadrosSemanais(), 800);
-      } else {
-        mostrarAnimacao('error-cross.json');
-      }
-    } catch (erro) {
-      mostrarAnimacao('error-cross.json');
-    }
-  } else {
-    erroSenha.classList.remove('d-none');
-  }
-});
 
 function mostrarToast(msg) {
   const toastEl = document.getElementById('toastSucesso');
