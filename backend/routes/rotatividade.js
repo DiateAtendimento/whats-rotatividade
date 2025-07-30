@@ -5,7 +5,8 @@ const {
   salvarLista,
   salvarRotatividade,
   obterUltimaRotatividade,
-  obterOrdemRotacionadaDeAtendentes
+  obterOrdemRotacionadaDeAtendentes,
+  obterLista,                    
 } = require('../sheets');
 
 // Rota para validar a senha
@@ -67,6 +68,18 @@ router.get('/nova-ordem', async (req, res) => {
   } catch (erro) {
     console.error('Erro ao obter nova ordem de atendentes:', erro);
     res.status(500).json({ ok: false, erro: 'Erro ao gerar nova ordem.' });
+  }
+});
+
+// 📋 Rota para obter Atendentes e Solicitantes
+router.get('/listas', async (req, res) => {
+  try {
+    const atendentes   = await obterLista('Atendentes');
+    const solicitantes = await obterLista('Solicitantes');
+    res.json({ ok: true, atendentes, solicitantes });
+  } catch (erro) {
+    console.error('Erro ao obter listas:', erro);
+    res.status(500).json({ ok: false, erro: 'Erro interno ao obter listas.' });
   }
 });
 

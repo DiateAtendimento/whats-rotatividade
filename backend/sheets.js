@@ -10,6 +10,16 @@ async function acessarPlanilha() {
   await doc.loadInfo();
 }
 
+// 📋 Obtém qualquer aba de “Nome”
+async function obterLista(nomeAba) {
+  await acessarPlanilha();
+  const aba = doc.sheetsByTitle[nomeAba];
+  if (!aba) return [];
+  await aba.loadHeaderRow();
+  const linhas = await aba.getRows();
+  return linhas.map(r => r['Nome']?.trim()).filter(Boolean);
+}
+
 // 🔐 Validação da senha
 async function validarSenha(senhaDigitada) {
   if (!senhaDigitada) return false;
@@ -100,61 +110,61 @@ async function salvarRotatividade({ quadros, mes, ano, responsavel }) {
   await aba.addRows(linhas);
 }
 
-// 📤 Obter última rotatividade salva
+// 🔄 Última rotatividade *sempre* retorna quadros (ou []) e as duas listas
 async function obterUltimaRotatividade() {
   await acessarPlanilha();
+  // pegar listas
+  const atendentes   = await obterLista('Atendentes');
+  const solicitantes = await obterLista('Solicitantes');
+
   const abaRot = doc.sheetsByTitle['Rotatividade'];
-  if (!abaRot) return null;
+  if (!abaRot) {
+    return { quadros: [], mes: null, ano: null, atendentes, solicitantes };
+  }
 
   await abaRot.loadHeaderRow();
-  const linhas = await abaRot.getRows();
-  if (linhas.length === 0) return null;
-
-  const agrupado = {};
-  for (const linha of linhas) {
-    const chave = `${linha['Ano']}-${linha['Mês']}`;
-    if (!agrupado[chave]) agrupado[chave] = [];
-    agrupado[chave].push(linha);
+  const todasLinhas = await abaRot.getRows();
+  if (todasLinhas.length === 0) {
+    return { quadros: [], mes: null, ano: null, atendentes, solicitantes };
   }
 
+  // agrupar por mês/ano e construir quadros
+  const agrupado = {};
+  todasLinhas.forEach(l => {
+    const chave = `${l['Ano']}-${l['Mês']}`;
+    agrupado[chave] = agrupado[chave] || [];
+    agrupado[chave].push(l);
+  });
   const chavesOrdenadas = Object.keys(agrupado).sort().reverse();
   const maisRecente = agrupado[chavesOrdenadas[0]];
-
   const quadros = [];
   for (let i = 0; i < 5; i++) {
-    const semana = `Semana ${i + 1}`;
+    const semana = `Semana ${i+1}`;
     const dadosSemana = maisRecente.filter(l => l['Semana'] === semana);
-    if (dadosSemana.length > 0) {
-      quadros.push(
-        dadosSemana.map(l => ({
-          solicitante: l['Solicitante'],
-          atendente: l['Atendente']
-        }))
-      );
-    }
+    if (dadosSemana.length)
+      quadros.push(dadosSemana.map(l => ({
+        solicitante: l['Solicitante'],
+        atendente:   l['Atendente']
+      })));
   }
-
   const ref = maisRecente[0];
-
-  const abaAtendentes = doc.sheetsByTitle['Atendentes'];
-  const abaSolicitantes = doc.sheetsByTitle['Solicitantes'];
-  await abaAtendentes?.loadHeaderRow();
-  await abaSolicitantes?.loadHeaderRow();
-
-  const atendentesRows = await abaAtendentes?.getRows() || [];
-  const solicitantesRows = await abaSolicitantes?.getRows() || [];
-
-  const atendentes = atendentesRows.map(r => r['Nome']?.trim()).filter(Boolean);
-  const solicitantes = solicitantesRows.map(r => r['Nome']?.trim()).filter(Boolean);
-
   return {
     quadros,
-    mes: ref['Mês'],
-    ano: ref['Ano'],
+    mes:         ref['Mês'],
+    ano:         ref['Ano'],
     atendentes,
     solicitantes
   };
 }
+
+module.exports = {
+  validarSenha,
+  salvarLista,
+  salvarRotatividade,
+  obterUltimaRotatividade,
+  obterOrdemRotacionadaDeAtendentes,
+  obterLista              // ← exporte
+};
 
 // 🔄 Nova ordem com rotação persistente
 async function obterOrdemRotacionadaDeAtendentes() {
