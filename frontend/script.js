@@ -43,8 +43,7 @@ async function carregarDadosIniciais() {
   try {
     const res = await fetch(`${API_URL}/ultima-rotatividade`);
     const data = await res.json();
-
-    console.log('Dados recebidos da API:', data.dados); // ✅ Aqui dentro do try!
+    console.log('🔎 Resposta completa da API:', data);
 
     if (data.ok && data.dados) {
       const { atendentes: a, solicitantes: s, quadros, mes, ano } = data.dados;
@@ -63,6 +62,7 @@ async function carregarDadosIniciais() {
     container.innerHTML = '<p class="text-danger">Erro ao carregar os dados.</p>';
   }
 }
+
 
 
 document.addEventListener('DOMContentLoaded', carregarDadosIniciais);
