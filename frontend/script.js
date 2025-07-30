@@ -253,9 +253,11 @@ function abrirModal(tipo, acao, index = -1) {
 salvarBtn.addEventListener('click', salvarNome);
 
 function salvarNome() {
-  const nome = nomeInput.value.trim();
-  if (!nome) {
+  const nome = nomeInput.value.trim().replace(/\s+/g, ' ');
+
+  if (!nome || nome.split(' ').every(w => w.toLowerCase() === nome.split(' ')[0].toLowerCase())) {
     nomeInput.classList.add('is-invalid');
+    nomeInput.nextElementSibling.textContent = 'Nome inválido ou repetido.';
     return;
   }
 
@@ -281,6 +283,7 @@ function salvarNome() {
   tipoAtual === 'atendente' ? renderizarAtendentes() : renderizarSolicitantes();
   mostrarToast('✅ Alterações salvas com sucesso!');
 }
+
 
 function excluirItem(index, tipo) {
   const lista = tipo === 'atendente' ? atendentes : solicitantes;
