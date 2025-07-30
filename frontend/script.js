@@ -1,4 +1,4 @@
-// ✅ script.js corrigido
+// ✅ script.js 
 
 const API_URL = 'https://rotatividade-backend.onrender.com/api/rotatividade';
 
@@ -17,24 +17,23 @@ const modal = new bootstrap.Modal(document.getElementById('crudModal'));
 const nomeInput = document.getElementById('nomeInput');
 const salvarBtn = document.getElementById('salvarBtn');
 
-async function carregarDadosIniciais() {
-  try {
-    const res = await fetch(`${API_URL}/ultima-rotatividade`);
-    const data = await res.json();
+function carregarDadosIniciais() {
+  mostrarAnimacao('list-loaded.json');
 
-    atendentes = data.atendentes;
-    solicitantes = data.solicitantes;
-
-    localStorage.setItem('atendentes', JSON.stringify(atendentes));
-    localStorage.setItem('solicitantes', JSON.stringify(solicitantes));
-
-    renderizarAtendentes();
-    renderizarSolicitantes();
-    renderizarQuadros(data.quadros, data.mes, data.ano);
-  } catch (error) {
-    console.error('Erro ao carregar dados iniciais:', error);
-  }
+  fetch(`${API_URL}/ultima-rotatividade`)
+    .then(res => res.json())
+    .then(data => {
+      atendentes = data.atendentes;
+      solicitantes = data.solicitantes;
+      localStorage.setItem('atendentes', JSON.stringify(atendentes));
+      localStorage.setItem('solicitantes', JSON.stringify(solicitantes));
+      renderizarAtendentes();
+      renderizarSolicitantes();
+      renderizarQuadros(data.quadros, data.mes, data.ano);
+    })
+    .catch(error => console.error('Erro ao carregar dados iniciais:', error));
 }
+
 
 document.addEventListener('DOMContentLoaded', () => {
   carregarDadosIniciais();
@@ -94,9 +93,18 @@ function salvarNome() {
     nomeInput.classList.add('is-invalid');
     return;
   }
-  nomeInput.classList.remove('is-invalid');
 
   const lista = tipoAtual === 'atendente' ? atendentes : solicitantes;
+  const nomeNormalizado = nome.toLowerCase();
+
+  const existe = lista.some((n, i) => i !== indexAtual && n.toLowerCase() === nomeNormalizado);
+  if (existe) {
+    nomeInput.classList.add('is-invalid');
+    nomeInput.nextElementSibling.textContent = 'Nome já existe.';
+    return;
+  }
+
+  nomeInput.classList.remove('is-invalid');
 
   if (modo === 'novo') {
     lista.push(nome);
@@ -106,7 +114,9 @@ function salvarNome() {
 
   modal.hide();
   tipoAtual === 'atendente' ? renderizarAtendentes() : renderizarSolicitantes();
+  mostrarToast('✅ Alterações salvas com sucesso!');
 }
+
 
 function excluirItem(index, tipo) {
   const lista = tipo === 'atendente' ? atendentes : solicitantes;
@@ -206,8 +216,10 @@ function gerarQuadrosSemanais() {
 }
 
 
-
 function mostrarAnimacao(nomeArquivo, callback) {
+  const btn = document.getElementById('gerarRotatividadeBtn');
+  btn.disabled = true;
+
   container.innerHTML = '<div id="lottie" class="text-center my-4" style="height: 200px;"></div>';
   const anim = lottie.loadAnimation({
     container: document.getElementById('lottie'),
@@ -217,9 +229,11 @@ function mostrarAnimacao(nomeArquivo, callback) {
     path: `https://rotatividade-backend.onrender.com/animacoes/${nomeArquivo}`
   });
   anim.addEventListener('complete', () => {
+    btn.disabled = false;
     if (callback) callback();
   });
 }
+
 
 function contarSemanasDoMesAtual() {
   const now = new Date();
@@ -264,3 +278,10 @@ document.getElementById('confirmarSenhaBtn').addEventListener('click', async () 
     erroSenha.classList.remove('d-none');
   }
 });
+
+function mostrarToast(msg) {
+  const toastEl = document.getElementById('toastSucesso');
+  toastEl.querySelector('.toast-body').textContent = msg;
+  const toast = new bootstrap.Toast(toastEl);
+  toast.show();
+}

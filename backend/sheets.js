@@ -24,7 +24,33 @@ async function validarSenha(senhaDigitada) {
   return senhas.includes(senhaDigitada.trim());
 }
 
-// Salvar lista de nomes em aba específica
+// 📍 Salva índice da última rotação de atendente
+async function salvarUltimoIndiceRotativo(indice) {
+  await acessarPlanilha();
+  const abaSenha = doc.sheetsByTitle['Senha'];
+  if (!abaSenha) return;
+
+  const linhas = await abaSenha.getRows();
+  if (linhas.length > 1) {
+    linhas[1]['Senha'] = indice.toString();
+    await linhas[1].save();
+  } else {
+    await abaSenha.addRow({ Senha: indice.toString() });
+  }
+}
+
+// 🔁 Recupera índice salvo da última rotação
+async function obterUltimoIndiceRotativo() {
+  await acessarPlanilha();
+  const abaSenha = doc.sheetsByTitle['Senha'];
+  if (!abaSenha) return 0;
+
+  const linhas = await abaSenha.getRows();
+  const valor = linhas[1]?.Senha;
+  return isNaN(valor) ? 0 : parseInt(valor);
+}
+
+// 💾 Salvar lista de nomes em aba
 async function salvarLista(nomeAba, dados) {
   await acessarPlanilha();
   let aba = doc.sheetsByTitle[nomeAba];
@@ -40,7 +66,7 @@ async function salvarLista(nomeAba, dados) {
   await aba.addRows(linhas);
 }
 
-// Salvar quadros semanais gerados
+// 🧾 Salvar quadros semanais na aba Rotatividade
 async function salvarRotatividade({ quadros, mes, ano, responsavel }) {
   await acessarPlanilha();
   let aba = doc.sheetsByTitle['Rotatividade'];
@@ -68,14 +94,13 @@ async function salvarRotatividade({ quadros, mes, ano, responsavel }) {
     });
   });
 
-  // Limpa todos os dados antigos da aba antes de salvar a nova rotatividade
   const linhasAntigas = await aba.getRows();
   for (const linha of linhasAntigas) await linha.delete();
 
   await aba.addRows(linhas);
 }
 
-// Obter última rotatividade salva
+// 📤 Obter última rotatividade salva
 async function obterUltimaRotatividade() {
   await acessarPlanilha();
   const abaRot = doc.sheetsByTitle['Rotatividade'];
@@ -131,19 +156,23 @@ async function obterUltimaRotatividade() {
   };
 }
 
-// Gera uma nova ordem rotacionada de atendentes
+// 🔄 Nova ordem com rotação persistente
 async function obterOrdemRotacionadaDeAtendentes() {
   await acessarPlanilha();
   const aba = doc.sheetsByTitle['Atendentes'];
-  if (!aba) return ['Samara', 'Thayná', 'Mateus'];
+  if (!aba) return [];
 
   await aba.loadHeaderRow();
   const linhas = await aba.getRows();
   const nomes = linhas.map(row => row.Nome?.trim()).filter(Boolean);
 
-  if (nomes.length === 0) return ['Samara', 'Thayná', 'Mateus'];
+  if (nomes.length === 0) return [];
 
-  const novaOrdem = nomes.slice(1).concat(nomes[0]);
+  const atual = await obterUltimoIndiceRotativo();
+  const novaOrdem = nomes.slice(atual).concat(nomes.slice(0, atual));
+  const proximoIndice = (atual + 1) % nomes.length;
+  await salvarUltimoIndiceRotativo(proximoIndice);
+
   return novaOrdem;
 }
 
