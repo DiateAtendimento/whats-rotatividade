@@ -22,7 +22,6 @@ try {
   solicitantes = [];
 }
 
-
 let tipoAtual = '';
 let modo = '';
 let indexAtual = -1;
@@ -31,8 +30,6 @@ const modal = new bootstrap.Modal(document.getElementById('crudModal'));
 const nomeInput = document.getElementById('nomeInput');
 const salvarBtn = document.getElementById('salvarBtn');
 const container = document.getElementById('quadrosContainer');
-
-
 
 // 🔁 CRUD sempre visível ao carregar
 renderizarAtendentes();
@@ -149,14 +146,8 @@ function gerarQuadrosSemanais() {
     body: JSON.stringify(dados),
   })
     .then(res => res.json())
-    .then(async res => {
+    .then(res => {
       if (res.ok) {
-        await fetch(`${API_URL}/salvar`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ quadros, mes, ano, responsavel: 'admin' })
-        });
-
         mostrarAnimacao('success-checkmark.json', () => {
           renderizarQuadros(quadros, mes, ano);
           renderizarAtendentes();
