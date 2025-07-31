@@ -37,35 +37,35 @@ async function validarSenha(senha) {
   return rows.some(r => r.Senha?.trim() === senha.trim());
 }
 
-// 📋 Salva lista sobrescrevendo de uma vez (header + todos os nomes)
+// 📋 Salva lista sobrescrevendo de ponta a ponta
 async function salvarLista(nomeAba, dados) {
   await acessarPlanilha();
+  let sheet = doc.sheetsByTitle[nomeAba];
 
-  // monta apenas nomes limpos e únicos
+  // 1) Cria a aba, se não existir
+  if (!sheet) {
+    sheet = await doc.addSheet({
+      title: nomeAba,
+      headerValues: ['Nome']
+    });
+  } else {
+    // 2) Limpa tudo (mantendo a aba)
+    await sheet.clear();
+    // 3) Recria apenas o cabeçalho
+    await sheet.setHeaderRow(['Nome']);
+  }
+
+  // 4) Normaliza, filtra vazio e deduplica
   const nomes = [...new Set(dados.map(normalizarNome).filter(Boolean))];
 
-  // prepara a matriz: linha 1 é o header, depois cada nome em sua linha
-  const values = [
-    ['Nome'],
-    ...nomes.map(n => [n])
-  ];
-
-  try {
-    // overwrite total da faixa A1:A{N}
-    await doc.batchUpdate({
-      valueInputOption: 'USER_ENTERED',
-      data: [
-        {
-          range: `'${nomeAba}'!A1:A${values.length}`,
-          values
-        }
-      ]
-    });
-  } catch (err) {
-    console.error(`⚠️ Erro ao sobrescrever aba "${nomeAba}":`, err);
-    // não propaga para o front — assim /api/rotatividade/listas retorna sempre 200
+  // 5) Se houver nomes, adiciona-os
+  if (nomes.length) {
+    await sheet.addRows(
+      nomes.map(nome => ({ Nome: nome }))
+    );
   }
 }
+
 
 
 // Grava todos os registros de rotatividade na aba “Rotatividade”
