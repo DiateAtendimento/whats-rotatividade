@@ -93,6 +93,7 @@ document.getElementById('confirmarSenhaBtn').addEventListener('click', async () 
     erroSenha.classList.remove('d-none');
     return;
   }
+  mostrarAnimacao('loading.json');
   senhaModal.hide();
   mostrarAnimacao('loading.json');
   const ordemRes  = await fetch(`${API_URL}/nova-ordem`);
@@ -256,22 +257,28 @@ function mostrarToast(msg) {
   new bootstrap.Toast(t).show();
 }
 
-function mostrarAnimacao(file, cb) {
-  const btn = document.getElementById('gerarRotatividadeBtn');
-  btn.disabled = true;
-  quadrosEl.innerHTML = `<div id="lottie" class="text-center my-4" style="height:200px;"></div>`;
+function mostrarAnimacao(nomeArquivo, callback) {
+  const lottieDiv = document.createElement('div');
+  lottieDiv.id = 'lottie';
+  lottieDiv.className = 'text-center my-4';
+  lottieDiv.style.height = '200px';
+  container.innerHTML = '';
+  container.appendChild(lottieDiv);
+
   const anim = lottie.loadAnimation({
-    container: document.getElementById('lottie'),
+    container: lottieDiv,
     renderer: 'svg',
     loop: false,
-    autoplay: true,  
-    path: `${API_URL.replace('/api/rotatividade','')}/animacoes/${file}`
+    autoplay: true,
+    path: `https://rotatividade-backend.onrender.com/animacoes/${nomeArquivo}`
   });
+
   anim.addEventListener('complete', () => {
-    btn.disabled = false;
-    if (cb) cb();
+    if (callback) callback();
   });
 }
+
+
 
 function contarSemanasDoMesAtual() {
   const now = new Date();
