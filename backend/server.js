@@ -2,38 +2,38 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
-const rotatividadeRoutes = require('./routes/rotatividade');
+const rotas = require('./routes/rotatividade');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// ✅ CORS configurado com origem específica
-app.use(cors({
-  origin: 'https://whatsaprotatividade.netlify.app',
-  methods: ['GET', 'POST', 'OPTIONS'],
-  allowedHeaders: ['Content-Type'],
-}));
+// CORS usando origem definida em .env
+app.use(
+  cors({
+    origin: process.env.FRONTEND_ORIGIN,
+    methods: ['GET', 'POST', 'OPTIONS'],
+    allowedHeaders: ['Content-Type']
+  })
+);
 
-// Middleware para JSON
 app.use(express.json());
 
-// Servir animações Lottie
+// Servir animações Lottie como estático
 app.use('/animacoes', express.static(path.join(__dirname, 'animacoes')));
 
-// Rotas
-app.use('/api/rotatividade', rotatividadeRoutes);
+// API de rotatividade
+app.use('/api/rotatividade', rotas);
 
-// Página inicial
+// Rota raiz para teste
 app.get('/', (req, res) => {
-  res.send('Servidor da Rotatividade de Atendimentos ativo! ✅');
+  res.send('Servidor da Rotatividade ativo! ✅');
 });
 
-// Rota 404
+// 404 fallback
 app.use((req, res) => {
-  res.status(404).send('Rota não encontrada: ' + req.originalUrl);
+  res.status(404).send(`Rota não encontrada: ${req.originalUrl}`);
 });
 
-// Inicia servidor
-app.listen(PORT, () => {
-  console.log(`Servidor rodando em http://localhost:${PORT}`);
-});
+app.listen(PORT, () =>
+  console.log(`Servidor rodando na porta ${PORT}`)
+);

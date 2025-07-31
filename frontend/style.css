@@ -1,109 +1,61 @@
-/* Tipografia e base */
+/* === Tipografia e cores básicas === */
 body {
   font-family: 'Segoe UI', sans-serif;
   background-color: #f8f9fa;
   color: #333;
 }
 
-/* Estrutura dos cards */
+/* === Cards === */
 .card {
   border: none;
   border-radius: 0.75rem;
 }
-
 .card-header {
   font-weight: bold;
   font-size: 1.1rem;
-  border-top-left-radius: 0.75rem;
-  border-top-right-radius: 0.75rem;
   box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.05);
 }
 
-/* Botão Gerar Rotatividade */
+/* === Botão Gerar Rotatividade === */
 #gerarRotatividadeBtn {
-  transition: all 0.3s ease;
+  transition: transform 0.3s ease;
   box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
 }
-
 #gerarRotatividadeBtn:hover {
   transform: scale(1.05);
 }
 
-/* Container do Lottie */
+/* === Container da animação Lottie === */
 #lottie {
   max-width: 100%;
   margin: auto;
   display: flex;
-  justify-content: center;
   align-items: center;
+  justify-content: center;
   height: 200px;
 }
 
-/* Tabelas */
+/* === Tabelas de quadros semanais === */
 .table th,
 .table td {
-  vertical-align: middle;
   text-align: center;
+  vertical-align: middle;
 }
-
 .table thead {
   background-color: #e9ecef;
 }
 
-/* Responsividade extra para mobile */
+/* === Feedback de campo inválido === */
+input.is-invalid {
+  border-color: #dc3545;
+}
+
+/* === Responsividade extra === */
 @media (max-width: 576px) {
   h1 {
     font-size: 1.5rem;
   }
-
   .card-header {
     font-size: 1rem;
   }
-}
-
-/* Espaçamento entre seções */
-section {
-  margin-bottom: 2rem;
-}
-
-/* Espaçamento entre botões CRUD */
-#atendentesContainer .btn,
-#solicitantesContainer .btn {
-  margin-left: 0.25rem;
-}
-
-/* Botões internos */
-button.btn-sm {
-  font-size: 0.8rem;
-}
-
-/* Suavidade nas animações */
-.fade-in {
-  animation: fadeIn 0.5s ease-in-out;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* Centralização e visual dos quadros */
-#quadrosContainer {
-  text-align: center;
-}
-
-/* Feedback de erro no campo de senha */
-#erroSenha {
-  font-size: 0.9rem;
-}
-
-/* Estilo para input inválido */
-input.is-invalid {
-  border-color: #dc3545;
 }
