@@ -1,5 +1,7 @@
 // script.js
 
+console.log('⚡ script.js carregado');
+
 const API_URL = 'https://rotatividade-backend.onrender.com/api/rotatividade';
 
 const senhaModal  = new bootstrap.Modal(document.getElementById('senhaModal'));
@@ -28,6 +30,8 @@ async function persistirListas() {
   solicitantes = [...new Set(solicitantes.map(n => n.trim()))];
 
   try {
+    console.log('📤 POST /listas payload:', { atendentes, solicitantes });
+    
     await fetch(`${API_URL}/listas`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -238,7 +242,12 @@ async function excluirItem(i, tipo) {
   const lista = tipo === 'atendente' ? atendentes : solicitantes;
   if (!confirm(`Excluir "${lista[i]}"?`)) return;
 
+  console.log('🗑️ excluirItem:', { tipo, index: i, listaAntes: [...lista] });
+  
   lista.splice(i, 1);
+  
+  console.log('➡️ listaDepois:', lista);
+
   await persistirListas();
   if (tipo === 'atendente') renderizarAtendentes();
   else                       renderizarSolicitantes();
