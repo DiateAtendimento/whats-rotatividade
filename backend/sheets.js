@@ -43,20 +43,30 @@ async function salvarLista(nomeAba, dados) {
   let aba = doc.sheetsByTitle[nomeAba];
 
   if (!aba) {
+    // Se não existir a aba, cria
     aba = await doc.addSheet({ title: nomeAba, headerValues: ['Nome'] });
   } else {
+    // Senão, apaga todas as linhas atuais
     const existentes = await aba.getRows();
     for (const l of existentes) {
       await l.delete();
     }
   }
 
+  // Prepara só nomes únicos e não vazios
   const nomesUnicos = [...new Set(dados.map(normalizarNome).filter(Boolean))];
-  // Só adiciona linhas se houver pelo menos 1 nome válido
+
   if (nomesUnicos.length > 0) {
-    await aba.addRows(nomesUnicos.map(nome => ({ Nome: nome })));
+    try {
+      // Tenta adicionar as linhas; se falhar, captura e segue
+      await aba.addRows(nomesUnicos.map(nome => ({ Nome: nome })));
+    } catch (err) {
+      console.error(`⚠️ Erro ao adicionar linhas na aba "${nomeAba}":`, err);
+      // Aqui não lançamos o erro: garantimos que a rota /listas continue retornando 200
+    }
   }
 }
+
 
 // Grava todos os registros de rotatividade na aba “Rotatividade”
 async function salvarRotatividade({ quadros, mes, ano, responsavel }) {
