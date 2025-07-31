@@ -182,10 +182,18 @@ document.getElementById('gerarRotatividadeBtn').addEventListener('click', () => 
   senhaModal.show();
 });
 
-// Após confirmar senha, busca nova ordem e gera quadros
-document.getElementById('confirmarSenhaBtn').addEventListener('click', async () => {
+
+
+const senhaForm = document.getElementById('senhaForm');
+
+// on submit do form de senha
+senhaForm.addEventListener('submit', async e => {
+  e.preventDefault();            // não recarrega a página
+
   const senha = senhaInput.value.trim();
   if (!senha) return;
+
+  // 1) valida a senha
   const res = await fetch(`${API_URL}/validar-senha`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -196,16 +204,23 @@ document.getElementById('confirmarSenhaBtn').addEventListener('click', async () 
     erroSenha.classList.remove('d-none');
     return;
   }
-  senhaModal.hide();
+
+  // 2) fecha o modal e mostra loading
+  bootstrap.Modal.getInstance(document.getElementById('senhaModal')).hide();
   mostrarAnimacao('loading.json');
+
+  // 3) busca nova ordem
   const ordem = await fetchJSON(`${API_URL}/nova-ordem`);
   if (!ordem.ok) {
     mostrarAnimacao('error-cross.json');
     return;
   }
   atendentes = ordem.atendentes;
+
+  // 4) gera e salva os quadros
   setTimeout(gerarESalvarQuadros, 800);
 });
+
 
 // Gera quadros e salva no Sheets
 async function gerarESalvarQuadros() {

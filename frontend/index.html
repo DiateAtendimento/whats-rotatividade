@@ -98,38 +98,58 @@
   </div>
 
   <!-- Modal de Senha para gerar nova ordem -->
-  <div
-    class="modal fade"
-    id="senhaModal"
-    tabindex="-1"
-    aria-labelledby="senhaModalLabel"
-    aria-hidden="true"
-  >
+  <div class="modal fade" id="senhaModal" tabindex="-1" aria-labelledby="senhaModalLabel" aria-hidden="true">
     <div class="modal-dialog">
       <div class="modal-content">
-        <!-- Formulário engloba todo o modal -->
         <form id="senhaForm">
-          <!-- campo oculto para satisfazer o username -->
+          <!-- campo oculto para satisfazer o username/autofill -->
           <input type="text" autocomplete="username" hidden />
-          <div class="modal-header">…</div>
+
+          <div class="modal-header">
+            <h5 class="modal-title" id="senhaModalLabel">🔐 Proteção</h5>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="Fechar"
+            ></button>
+          </div>
+
           <div class="modal-body">
-            <label for="senhaInput">Digite a senha:</label>
+            <label for="senhaInput" class="form-label">Digite a senha:</label>
             <input
               type="password"
               id="senhaInput"
-              autocomplete="new-password"
               class="form-control"
+              placeholder="Senha"
+              autocomplete="new-password"
             />
-            <div id="erroSenha" class="text-danger d-none">Senha incorreta.</div>
+            <div id="erroSenha" class="text-danger mt-2 d-none">
+              Senha incorreta.
+            </div>
           </div>
+
           <div class="modal-footer">
-            <button type="button" …>Cancelar</button>
-            <button type="submit" id="confirmarSenhaBtn">Confirmar</button>
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-bs-dismiss="modal"
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              class="btn btn-primary"
+              id="confirmarSenhaBtn"
+            >
+              Confirmar
+            </button>
           </div>
         </form>
       </div>
     </div>
   </div>
+
 
   <!-- Toast de sucesso -->
   <div
