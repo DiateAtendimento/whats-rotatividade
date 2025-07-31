@@ -7,31 +7,19 @@ const rotas = require('./routes/rotatividade');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// CORS usando origem definida em .env
-app.use(
-  cors({
-    origin: process.env.FRONTEND_ORIGIN,
-    methods: ['GET', 'POST', 'OPTIONS'],
-    allowedHeaders: ['Content-Type']
-  })
-);
-
+// Para desenvolvimento, libera CORS de qualquer origem
+app.use(cors());
 app.use(express.json());
 
-// Servir animações Lottie como estático
-app.use('/animacoes', express.static(path.join(__dirname, 'animacoes')));
+// 1) Servir frontend estático (index.html, script.js, style.css)
+app.use(express.static(path.join(__dirname, 'frontend')));
 
-// API de rotatividade
+// 2) Rotas da API
 app.use('/api/rotatividade', rotas);
 
-// Rota raiz para teste
-app.get('/', (req, res) => {
-  res.send('Servidor da Rotatividade ativo! ✅');
-});
-
-// 404 fallback
-app.use((req, res) => {
-  res.status(404).send(`Rota não encontrada: ${req.originalUrl}`);
+// 3) Fallback para SPA: devolve index.html em todas as outras rotas GET
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'frontend', 'index.html'));
 });
 
 app.listen(PORT, () =>
