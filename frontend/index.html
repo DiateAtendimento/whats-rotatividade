@@ -107,41 +107,42 @@
   >
     <div class="modal-dialog">
       <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title">🔐 Proteção</h5>
-          <button
-            type="button"
-            class="btn-close"
-            data-bs-dismiss="modal"
-            aria-label="Fechar"
-          ></button>
-        </div>
-        <div class="modal-body">
-          <label for="senhaInput" class="form-label"
-            >Digite a senha:</label
-          >
-          <input
-            type="password"
-            id="senhaInput"
-            class="form-control"
-            placeholder="Senha"
-          />
-          <div id="erroSenha" class="text-danger mt-2 d-none">
-            Senha incorreta.
+        <!-- Formulário engloba todo o modal -->
+        <form id="senhaForm">
+          <div class="modal-header">
+            <h5 class="modal-title" id="senhaModalLabel">🔐 Proteção</h5>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="Fechar"
+            ></button>
           </div>
-        </div>
-        <div class="modal-footer">
-          <button
-            type="button"
-            class="btn btn-secondary"
-            data-bs-dismiss="modal"
-          >
-            Cancelar
-          </button>
-          <button type="button" class="btn btn-primary" id="confirmarSenhaBtn">
-            Confirmar
-          </button>
-        </div>
+          <div class="modal-body">
+            <label for="senhaInput" class="form-label">Digite a senha:</label>
+            <input
+              type="password"
+              id="senhaInput"
+              class="form-control"
+              placeholder="Senha"
+            />
+            <div id="erroSenha" class="text-danger mt-2 d-none">
+              Senha incorreta.
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-bs-dismiss="modal"
+            >
+              Cancelar
+            </button>
+            <button type="submit" class="btn btn-primary" id="confirmarSenhaBtn">
+              Confirmar
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   </div>
