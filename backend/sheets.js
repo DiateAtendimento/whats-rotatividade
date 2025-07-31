@@ -37,34 +37,31 @@ async function validarSenha(senha) {
   return rows.some(r => r.Senha?.trim() === senha.trim());
 }
 
-// 📋 Salva lista sobrescrevendo de uma vez (header + todos os nomes)
+// 📋 Salva lista sobrescrevendo de ponta a ponta
 async function salvarLista(nomeAba, dados) {
   await acessarPlanilha();
-  let aba = doc.sheetsByTitle[nomeAba];
+  let sheet = doc.sheetsByTitle[nomeAba];
 
-  // 1) cria a aba se ainda não existir
-  if (!aba) {
-    aba = await doc.addSheet({ title: nomeAba, headerValues: ['Nome'] });
+  // 1) cria a aba com cabeçalho, se ainda não existir
+  if (!sheet) {
+    sheet = await doc.addSheet({ title: nomeAba, headerValues: ['Nome'] });
   }
 
-  // 2) normaliza, filtra vazio e deduplica
+  // 2) limpa TUDO que estiver nela
+  await sheet.clear();
+
+  // 3) recria o header
+  await sheet.setHeaderRow(['Nome']);
+
+  // 4) prepara só nomes únicos e não-vazios
   const nomes = [...new Set(dados.map(normalizarNome).filter(Boolean))];
 
-  // 3) monta a matriz: primeira linha é o header, depois cada nome
-  const values = [
-    ['Nome'],
-    ...nomes.map(n => [n])
-  ];
-
-  // 4) envia um batchUpdate para sobrescrever A1:A{N}
-  await doc.batchUpdate({
-    valueInputOption: 'USER_ENTERED',
-    data: [{
-      range: `'${nomeAba}'!A1:A${values.length}`,
-      values
-    }]
-  });
+  // 5) adiciona linha a linha
+  if (nomes.length) {
+    await sheet.addRows(nomes.map(n => ({ Nome: n })));
+  }
 }
+
 
 
 
