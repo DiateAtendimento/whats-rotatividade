@@ -109,6 +109,8 @@
       <div class="modal-content">
         <!-- Formulário engloba todo o modal -->
         <form id="senhaForm">
+          <!-- campo oculto de username para acessibilidade/autofill -->
+          <input type="text" autocomplete="username" hidden />
           <div class="modal-header">
             <h5 class="modal-title" id="senhaModalLabel">🔐 Proteção</h5>
             <button
@@ -139,7 +141,11 @@
             >
               Cancelar
             </button>
-            <button type="submit" class="btn btn-primary" id="confirmarSenhaBtn">
+            <button
+              type="submit"
+              class="btn btn-primary"
+              id="confirmarSenhaBtn"
+            >
               Confirmar
             </button>
           </div>
