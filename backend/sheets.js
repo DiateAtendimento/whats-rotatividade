@@ -37,18 +37,25 @@ async function validarSenha(senha) {
   return rows.some(r => r.Senha?.trim() === senha.trim());
 }
 
-// Sobrescreve lista (Atendentes/Solicitantes)
+// 💾 Salva lista sobrescrevendo (deduplicada)
 async function salvarLista(nomeAba, dados) {
   await acessarPlanilha();
   let aba = doc.sheetsByTitle[nomeAba];
+
   if (!aba) {
     aba = await doc.addSheet({ title: nomeAba, headerValues: ['Nome'] });
   } else {
     const existentes = await aba.getRows();
-    for (const r of existentes) await r.delete();
+    for (const l of existentes) {
+      await l.delete();
+    }
   }
-  const unicos = [...new Set(dados.map(normalizarNome).filter(Boolean))];
-  await aba.addRows(unicos.map(n => ({ Nome: n })));
+
+  const nomesUnicos = [...new Set(dados.map(normalizarNome).filter(Boolean))];
+  // Só adiciona linhas se houver pelo menos 1 nome válido
+  if (nomesUnicos.length > 0) {
+    await aba.addRows(nomesUnicos.map(nome => ({ Nome: nome })));
+  }
 }
 
 // Grava todos os registros de rotatividade na aba “Rotatividade”
