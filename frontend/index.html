@@ -67,7 +67,9 @@
         </div>
         <div class="modal-body">
           <input type="text" id="nomeInput" class="form-control" placeholder="Digite o nome" />
-          <div class="invalid-feedback">Por favor, preencha um nome válido.</div>
+          <div class="invalid-feedback" id="feedbackNome">
+            <!-- Será preenchido dinamicamente -->
+          </div>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
@@ -76,6 +78,7 @@
       </div>
     </div>
   </div>
+
 
   <!-- Modal de Senha -->
   <div class="modal fade" id="senhaModal" tabindex="-1" aria-labelledby="senhaModalLabel" aria-hidden="true">

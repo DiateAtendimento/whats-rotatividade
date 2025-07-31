@@ -9,6 +9,7 @@ const nomeModal   = new bootstrap.Modal(document.getElementById('crudModal'));
 const senhaInput  = document.getElementById('senhaInput');
 const erroSenha   = document.getElementById('erroSenha');
 const nomeInput   = document.getElementById('nomeInput');
+const feedbackNome = document.getElementById('feedbackNome');
 const salvarBtn   = document.getElementById('salvarBtn');
 const quadrosEl   = document.getElementById('quadrosContainer');
 
@@ -31,7 +32,6 @@ async function persistirListas() {
 
   try {
     console.log('📤 POST /listas payload:', { atendentes, solicitantes });
-    
     await fetch(`${API_URL}/listas`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -73,7 +73,7 @@ async function carregarDadosIniciais() {
 
 document.addEventListener('DOMContentLoaded', carregarDadosIniciais);
 
-// —– Fluxo de geração protegido por senha
+// — Fluxo de geração protegido por senha
 document.getElementById('gerarRotatividadeBtn').addEventListener('click', () => {
   senhaInput.value = '';
   erroSenha.classList.add('d-none');
@@ -83,22 +83,18 @@ document.getElementById('gerarRotatividadeBtn').addEventListener('click', () => 
 document.getElementById('confirmarSenhaBtn').addEventListener('click', async () => {
   const senha = senhaInput.value.trim();
   if (!senha) return;
-
   const res  = await fetch(`${API_URL}/validar-senha`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ senha })
   });
   const json = await res.json();
-
   if (!json.ok) {
     erroSenha.classList.remove('d-none');
     return;
   }
-
   senhaModal.hide();
   mostrarAnimacao('loading.json');
-
   const ordemRes  = await fetch(`${API_URL}/nova-ordem`);
   const ordemJson = await ordemRes.json();
   if (!ordemJson.ok) {
@@ -109,14 +105,13 @@ document.getElementById('confirmarSenhaBtn').addEventListener('click', async () 
   setTimeout(gerarESalvarQuadros, 800);
 });
 
-// —– Geração de quadros + persistência
+// — Geração de quadros + persistência
 async function gerarESalvarQuadros() {
   if (!atendentes.length || !solicitantes.length) {
     mostrarAnimacao('error-cross.json');
     alert('É necessário ter pelo menos 1 atendente e 1 solicitante.');
     return;
   }
-
   const semanas     = contarSemanasDoMesAtual();
   const totalAt     = atendentes.length;
   const quadros     = [];
@@ -154,7 +149,7 @@ async function gerarESalvarQuadros() {
   }
 }
 
-// —– Renderização de quadros
+// — Renderização de quadros
 function renderizarQuadros(quadros, mes, ano) {
   quadrosEl.innerHTML = `<h4 class="text-primary">📅 Referente a: ${mes} de ${ano}</h4>`;
   quadros.forEach((sem, i) => {
@@ -169,7 +164,7 @@ function renderizarQuadros(quadros, mes, ano) {
   });
 }
 
-// —– CRUD de listas
+// — CRUD de listas
 function renderizarAtendentes() {
   const c = document.getElementById('atendentesContainer');
   c.innerHTML = '';
@@ -202,59 +197,59 @@ function abrirModal(tipo, modo, i = -1) {
   nomeInput.value = modo === 'editar'
     ? (tipo === 'atendente' ? atendentes[i] : solicitantes[i])
     : '';
-  document.getElementById('crudModalLabel').textContent = 
+  document.getElementById('crudModalLabel').textContent =
     `${modo==='novo'?'Adicionar':'Editar'} ${tipo==='atendente'?'Atendente':'Solicitante'}`;
+  feedbackNome.textContent = '';     // limpa mensagem antiga
+  nomeInput.classList.remove('is-invalid');
   salvarBtn.textContent = modo === 'novo' ? 'Adicionar' : 'Salvar';
   nomeModal.show();
 }
 
-// —– Salvar (CRUD) com persistência
+// — Validar e persistir (CRUD)
 salvarBtn.addEventListener('click', async () => {
   const nome = nomeInput.value.trim().replace(/\s+/g, ' ');
+  // 1) vazio?
   if (!nome) {
     nomeInput.classList.add('is-invalid');
+    feedbackNome.textContent = 'Por favor, preencha um nome válido.';
     return;
   }
-
+  // 2) duplicata?
   const lista = tipoAtual === 'atendente' ? atendentes : solicitantes;
+  const label = tipoAtual === 'atendente' ? 'atendente' : 'solicitante';
   const existe = lista.some((n, idx) => idx !== idxAtual && n.toLowerCase() === nome.toLowerCase());
   if (existe) {
     nomeInput.classList.add('is-invalid');
+    feedbackNome.textContent = `Esse ${label} já foi adicionado.`;
     return;
   }
   nomeInput.classList.remove('is-invalid');
+  feedbackNome.textContent = '';
 
-  if (modoAtual === 'novo') {
-    lista.push(nome);
-  } else {
-    lista[idxAtual] = nome;
-  }
+  // 3) adicionar ou editar
+  if (modoAtual === 'novo') lista.push(nome);
+  else                        lista[idxAtual] = nome;
 
   nomeModal.hide();
   await persistirListas();
   renderizarAtendentes();
   renderizarSolicitantes();
-  mostrarToast('✅ Alteração salva!');
+  mostrarToast(`✅ ${label.charAt(0).toUpperCase() + label.slice(1)} ${modoAtual==='novo'?'adicionado':'atualizado'}!`);
 });
 
-// —– Exclusão (CRUD) com persistência
+// — Exclusão (CRUD)
 async function excluirItem(i, tipo) {
   const lista = tipo === 'atendente' ? atendentes : solicitantes;
   if (!confirm(`Excluir "${lista[i]}"?`)) return;
 
-  console.log('🗑️ excluirItem:', { tipo, index: i, listaAntes: [...lista] });
-  
   lista.splice(i, 1);
-  
-  console.log('➡️ listaDepois:', lista);
-
   await persistirListas();
   if (tipo === 'atendente') renderizarAtendentes();
   else                       renderizarSolicitantes();
   mostrarToast('🗑️ Item excluído');
 }
 
-// —– Helpers visuais
+// — Helpers visuais
 function mostrarToast(msg) {
   const t = document.getElementById('toastSucesso');
   t.querySelector('.toast-body').textContent = msg;
@@ -269,7 +264,7 @@ function mostrarAnimacao(file, cb) {
     container: document.getElementById('lottie'),
     renderer: 'svg',
     loop: false,
-    autoplay: true,
+    autoplay: true,  
     path: `${API_URL.replace('/api/rotatividade','')}/animacoes/${file}`
   });
   anim.addEventListener('complete', () => {
