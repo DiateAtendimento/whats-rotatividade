@@ -37,35 +37,35 @@ async function validarSenha(senha) {
   return rows.some(r => r.Senha?.trim() === senha.trim());
 }
 
-// 💾 Salva lista sobrescrevendo (deduplicada)
+// 📋 Salva lista sobrescrevendo de uma vez (header + todos os nomes)
 async function salvarLista(nomeAba, dados) {
   await acessarPlanilha();
   let aba = doc.sheetsByTitle[nomeAba];
 
+  // 1) cria a aba se ainda não existir
   if (!aba) {
-    // Se não existir a aba, cria
     aba = await doc.addSheet({ title: nomeAba, headerValues: ['Nome'] });
-  } else {
-    // Senão, apaga todas as linhas atuais
-    const existentes = await aba.getRows();
-    for (const l of existentes) {
-      await l.delete();
-    }
   }
 
-  // Prepara só nomes únicos e não vazios
-  const nomesUnicos = [...new Set(dados.map(normalizarNome).filter(Boolean))];
+  // 2) normaliza, filtra vazio e deduplica
+  const nomes = [...new Set(dados.map(normalizarNome).filter(Boolean))];
 
-  if (nomesUnicos.length > 0) {
-    try {
-      // Tenta adicionar as linhas; se falhar, captura e segue
-      await aba.addRows(nomesUnicos.map(nome => ({ Nome: nome })));
-    } catch (err) {
-      console.error(`⚠️ Erro ao adicionar linhas na aba "${nomeAba}":`, err);
-      // Aqui não lançamos o erro: garantimos que a rota /listas continue retornando 200
-    }
-  }
+  // 3) monta a matriz: primeira linha é o header, depois cada nome
+  const values = [
+    ['Nome'],
+    ...nomes.map(n => [n])
+  ];
+
+  // 4) envia um batchUpdate para sobrescrever A1:A{N}
+  await doc.batchUpdate({
+    valueInputOption: 'USER_ENTERED',
+    data: [{
+      range: `'${nomeAba}'!A1:A${values.length}`,
+      values
+    }]
+  });
 }
+
 
 
 // Grava todos os registros de rotatividade na aba “Rotatividade”
