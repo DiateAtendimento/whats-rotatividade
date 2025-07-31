@@ -1,8 +1,9 @@
 // Carreguei o script
 console.log('⚡ script.js carregado');
 
-// URL base da API (relativo ao mesmo host do backend)
-const API_URL = '/api/rotatividade';
+// URL base da API (backend no Render)
+const BACKEND_BASE = 'https://whats-rotatividade.onrender.com';
+const API_URL = `${BACKEND_BASE}/api/rotatividade`;
 
 let atendentes = [], solicitantes = [];
 let tipoAtual = '', modoAtual = '', idxAtual = -1;
@@ -287,7 +288,8 @@ function mostrarAnimacao(file, cb) {
     renderer: 'svg',
     loop: false,
     autoplay: true,
-    path: `/animacoes/${file}`
+    path: `${BACKEND_BASE}/animacoes/${file}`
+
   });
   anim.addEventListener('complete', () => {
     btn.disabled = false;
