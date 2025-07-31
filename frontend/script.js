@@ -167,10 +167,7 @@ async function persistirListas() {
     await fetch(`${API_URL}/listas`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        atendentes,
-        solicitantes
-      })
+      body: JSON.stringify({ atendentes, solicitantes })
     });
   } catch (e) {
     console.error('Erro ao persistir listas:', e);

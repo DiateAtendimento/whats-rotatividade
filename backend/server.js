@@ -7,19 +7,20 @@ const rotas = require('./routes/rotatividade');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Para desenvolvimento, libera CORS de qualquer origem
+// Para desenvolvimento: libera CORS de qualquer origem
 app.use(cors());
 app.use(express.json());
 
-// 1) Servir frontend estático (index.html, script.js, style.css)
-app.use(express.static(path.join(__dirname, 'frontend')));
+// Servindo o frontend que está um nível acima de `backend/`
+const frontPath = path.join(__dirname, '..', 'frontend');
+app.use(express.static(frontPath));
 
-// 2) Rotas da API
+// Rotas da API de rotatividade
 app.use('/api/rotatividade', rotas);
 
-// 3) Fallback para SPA: devolve index.html em todas as outras rotas GET
+// Qualquer outra rota GET retorna o index.html do frontend
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'frontend', 'index.html'));
+  res.sendFile(path.join(frontPath, 'index.html'));
 });
 
 app.listen(PORT, () =>
