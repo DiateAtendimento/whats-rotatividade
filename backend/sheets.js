@@ -1,5 +1,3 @@
-// sheets.js
-
 const { GoogleSpreadsheet } = require('google-spreadsheet');
 
 const creds = JSON.parse(
@@ -7,39 +5,64 @@ const creds = JSON.parse(
 );
 const doc = new GoogleSpreadsheet(process.env.SHEET_ID);
 
+// 🔐 Acesso e carregamento da planilha
 async function acessarPlanilha() {
   await doc.useServiceAccountAuth(creds);
   await doc.loadInfo();
 }
 
-// 📋 Obtém qualquer aba de “Nome”
+// 🔠 Limpeza e padronização de nomes
+function normalizarNome(nome) {
+  return nome
+    ?.normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+// 📋 Obtém lista da aba (Atendentes ou Solicitantes)
 async function obterLista(nomeAba) {
   await acessarPlanilha();
   const aba = doc.sheetsByTitle[nomeAba];
   if (!aba) return [];
-  await aba.loadHeaderRow();
   const linhas = await aba.getRows();
-  return linhas.map(r => r['Nome']?.trim()).filter(Boolean);
+  return linhas.map(r => normalizarNome(r['Nome'])).filter(Boolean);
 }
 
-// 🔐 Validação da senha
+// 🔐 Verifica se a senha está presente na aba 'Senha'
 async function validarSenha(senhaDigitada) {
   if (!senhaDigitada) return false;
   await acessarPlanilha();
   const aba = doc.sheetsByTitle['Senha'];
   if (!aba) return false;
-  await aba.loadHeaderRow();
   const linhas = await aba.getRows();
   return linhas
     .map(r => r.Senha?.toString().trim())
     .includes(senhaDigitada.trim());
 }
 
-// 📍 Salva índice da última rotação de atendente
+// 💾 Salva lista sobrescrevendo (deduplicada)
+async function salvarLista(nomeAba, dados) {
+  await acessarPlanilha();
+  let aba = doc.sheetsByTitle[nomeAba];
+
+  if (!aba) {
+    aba = await doc.addSheet({ title: nomeAba, headerValues: ['Nome'] });
+  } else {
+    const existentes = await aba.getRows();
+    for (const l of existentes) await l.delete();
+  }
+
+  const nomesUnicos = [...new Set(dados.map(normalizarNome).filter(Boolean))];
+  await aba.addRows(nomesUnicos.map(nome => ({ Nome: nome })));
+}
+
+// 📍 Salva índice rotativo
 async function salvarUltimoIndiceRotativo(indice) {
   await acessarPlanilha();
   const aba = doc.sheetsByTitle['Senha'];
   if (!aba) return;
+
   const linhas = await aba.getRows();
   if (linhas.length > 1) {
     linhas[1].Senha = indice.toString();
@@ -49,7 +72,7 @@ async function salvarUltimoIndiceRotativo(indice) {
   }
 }
 
-// 🔁 Recupera índice salvo da última rotação
+// 📍 Recupera índice rotativo
 async function obterUltimoIndiceRotativo() {
   await acessarPlanilha();
   const aba = doc.sheetsByTitle['Senha'];
@@ -59,23 +82,11 @@ async function obterUltimoIndiceRotativo() {
   return isNaN(valor) ? 0 : parseInt(valor, 10);
 }
 
-// 💾 Salvar lista de nomes em aba
-async function salvarLista(nomeAba, dados) {
-  await acessarPlanilha();
-  let aba = doc.sheetsByTitle[nomeAba];
-  if (!aba) {
-    aba = await doc.addSheet({ title: nomeAba, headerValues: ['Nome'] });
-  } else {
-    const linhas = await aba.getRows();
-    for (const l of linhas) await l.delete();
-  }
-  await aba.addRows(dados.map(nome => ({ Nome: nome })));
-}
-
-// 🧾 Salvar quadros semanais na aba “Rotatividade”
+// 🧾 Salvar quadros na aba “Rotatividade”
 async function salvarRotatividade({ quadros, mes, ano, responsavel }) {
   await acessarPlanilha();
   let aba = doc.sheetsByTitle['Rotatividade'];
+
   if (!aba) {
     aba = await doc.addSheet({
       title: 'Rotatividade',
@@ -108,32 +119,27 @@ async function salvarRotatividade({ quadros, mes, ano, responsavel }) {
     });
   });
 
-  const antigas = await aba.getRows();
-  for (const l of antigas) await l.delete();
+  const existentes = await aba.getRows();
+  for (const l of existentes) await l.delete();
   await aba.addRows(linhas);
 }
 
-// 🔄 Última rotatividade *sempre* retorna quadros (ou []) e as duas listas
+// 📤 Obter última rotatividade + listas
 async function obterUltimaRotatividade() {
   await acessarPlanilha();
   const atendentes = await obterLista('Atendentes');
   const solicitantes = await obterLista('Solicitantes');
+
   const abaRot = doc.sheetsByTitle['Rotatividade'];
-  if (!abaRot) {
-    return { quadros: [], mes: null, ano: null, atendentes, solicitantes };
-  }
+  if (!abaRot) return { quadros: [], mes: null, ano: null, atendentes, solicitantes };
 
-  await abaRot.loadHeaderRow();
   const rows = await abaRot.getRows();
-  if (rows.length === 0) {
-    return { quadros: [], mes: null, ano: null, atendentes, solicitantes };
-  }
+  if (!rows.length) return { quadros: [], mes: null, ano: null, atendentes, solicitantes };
 
-  // agrupar por mês/ano e construir quadros
   const agrupado = {};
   rows.forEach(r => {
     const chave = `${r['Ano']}-${r['Mês']}`;
-    agrupado[chave] = agrupado[chave] || [];
+    if (!agrupado[chave]) agrupado[chave] = [];
     agrupado[chave].push(r);
   });
 
@@ -143,10 +149,10 @@ async function obterUltimaRotatividade() {
 
   for (let i = 0; i < 5; i++) {
     const semana = `Semana ${i + 1}`;
-    const fil = dados.filter(r => r['Semana'] === semana);
-    if (fil.length) {
+    const daSemana = dados.filter(r => r['Semana'] === semana);
+    if (daSemana.length) {
       quadros.push(
-        fil.map(r => ({
+        daSemana.map(r => ({
           solicitante: r['Solicitante'],
           atendente: r['Atendente']
         }))
@@ -164,15 +170,14 @@ async function obterUltimaRotatividade() {
   };
 }
 
-// 🔄 Nova ordem com rotação persistente
+// 🔁 Rotação baseada em índice persistente
 async function obterOrdemRotacionadaDeAtendentes() {
   await acessarPlanilha();
   const aba = doc.sheetsByTitle['Atendentes'];
   if (!aba) return [];
 
-  await aba.loadHeaderRow();
   const nomes = (await aba.getRows())
-    .map(r => r.Nome?.trim())
+    .map(r => normalizarNome(r.Nome))
     .filter(Boolean);
 
   if (!nomes.length) return [];
@@ -185,13 +190,13 @@ async function obterOrdemRotacionadaDeAtendentes() {
   return novaOrdem;
 }
 
-// ——— Export único, completo ———
+// 📦 Export
 module.exports = {
   obterLista,
   validarSenha,
+  salvarLista,
   salvarUltimoIndiceRotativo,
   obterUltimoIndiceRotativo,
-  salvarLista,
   salvarRotatividade,
   obterUltimaRotatividade,
   obterOrdemRotacionadaDeAtendentes
