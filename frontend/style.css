@@ -201,13 +201,13 @@ input.is-invalid {
    🖼 Toast & Modais
 ─────────────────────────────────────────────────────────── */
 .modal-content {
-  background: rgba(255,255,255,0.15);
+  background: rgb(255, 255, 255);
   backdrop-filter: blur(12px);
   border: 1px solid var(--clr-surface-border);
   border-radius: var(--radius);
 }
 .toast {
-  background: rgba(255,255,255,0.25);
+  background: rgba(0, 0, 0, 0.25);
   backdrop-filter: blur(8px);
   border-radius: var(--radius);
   color: var(--clr-text);
