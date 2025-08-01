@@ -20,6 +20,14 @@ const senhaInput   = document.getElementById('senhaInput');
 const erroSenha    = document.getElementById('erroSenha');
 const quadrosEl    = document.getElementById('quadrosContainer');
 
+// Atalho Enter no modal CRUD
+nomeInput.addEventListener('keypress', e => {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    document.getElementById('salvarBtn').click();
+  }
+});
+
 // Atalho Enter no modal de senha
 senhaInput.addEventListener('keypress', e => {
   if (e.key === 'Enter') document.getElementById('confirmarSenhaBtn').click();
