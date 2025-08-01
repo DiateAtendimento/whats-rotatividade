@@ -1,150 +1,169 @@
 /* ───────────────────────────────────────────────────────────
+   ✨ Import de fontes
+─────────────────────────────────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Montserrat:wght@700&display=swap');
+
+/* ───────────────────────────────────────────────────────────
    🔧 Variáveis de Tema
 ─────────────────────────────────────────────────────────── */
 :root {
-  --color-bg: #f4f6f9;
-  --color-surface: #ffffff;
-  --color-primary: #1a73e8;
-  --color-primary-hover: #1669c1;
-  --color-secondary: #34a853;
-  --color-secondary-hover: #2e944b;
-  --color-on-surface: #333333;
-  --color-muted: #6c757d;
-  --radius: 0.75rem;
-  --shadow-sm: 0 1px 3px rgba(0,0,0,0.1);
-  --shadow-md: 0 4px 12px rgba(0,0,0,0.1);
-  --transition: 0.2s ease-in-out;
+  --clr-bg-top: #667eea;
+  --clr-bg-bottom: #764ba2;
+  --clr-surface: rgba(255,255,255,0.25);
+  --clr-surface-border: rgba(255,255,255,0.4);
+  --clr-primary: #ff6b6b;
+  --clr-primary-hover: #fa5252;
+  --clr-secondary: #48dbfb;
+  --clr-secondary-hover: #38c8e8;
+  --clr-text: #ffffff;
+  --radius: 1rem;
+  --shadow-glass: 0 8px 32px rgba(0, 0, 0, 0.1);
+  --transition: 0.3s ease;
 }
 
 /* ───────────────────────────────────────────────────────────
-   📚 Tipografia e Layout
+   🌌 Background Gradiente + Formas
 ─────────────────────────────────────────────────────────── */
-* {
-  box-sizing: border-box;
-}
-
 body {
   margin: 0;
   padding: 0;
   font-family: 'Inter', sans-serif;
-  background-color: var(--color-bg);
-  color: var(--color-on-surface);
-  line-height: 1.6;
+  background: linear-gradient(135deg, var(--clr-bg-top), var(--clr-bg-bottom));
+  position: relative;
+  overflow-x: hidden;
+  color: var(--clr-text);
 }
-
-h1, h2, h3, h4, h5 {
-  font-weight: 600;
-  color: var(--color-on-surface);
-  margin-bottom: 1rem;
+body::before,
+body::after {
+  content: '';
+  position: absolute;
+  border-radius: 50%;
+  opacity: 0.3;
+  filter: blur(120px);
+}
+body::before {
+  width: 600px; height: 600px;
+  background: #ff9ff3;
+  top: -200px; left: -200px;
+}
+body::after {
+  width: 800px; height: 800px;
+  background: #54a0ff;
+  bottom: -300px; right: -300px;
 }
 
 /* ───────────────────────────────────────────────────────────
-   🃏 Cards
+   📚 Tipografia
+─────────────────────────────────────────────────────────── */
+h1 {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 2.5rem;
+  text-align: center;
+  margin-bottom: 0.5rem;
+  text-shadow: 2px 2px 8px rgba(0,0,0,0.2);
+}
+p {
+  text-align: center;
+  font-weight: 300;
+  opacity: 0.9;
+}
+
+/* ───────────────────────────────────────────────────────────
+   🃏 Cards (Glassmorphism)
 ─────────────────────────────────────────────────────────── */
 .card {
-  background-color: var(--color-surface);
-  border: none;
+  background: var(--clr-surface);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--clr-surface-border);
   border-radius: var(--radius);
-  box-shadow: var(--shadow-md);
-  transition: box-shadow var(--transition);
+  box-shadow: var(--shadow-glass);
+  transition: transform var(--transition), box-shadow var(--transition);
 }
-
 .card:hover {
-  box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+  transform: translateY(-10px);
+  box-shadow: 0 16px 48px rgba(0,0,0,0.15);
 }
-
 .card-header {
-  background-color: transparent;
-  border-bottom: none;
-  font-size: 1.15rem;
-  padding: 1rem 1.5rem;
-  border-radius: var(--radius) var(--radius) 0 0;
-  color: var(--color-on-surface);
+  background: transparent;
+  border-bottom: 1px solid var(--clr-surface-border);
+  font-size: 1.25rem;
+  color: var(--clr-text);
 }
 
 /* ───────────────────────────────────────────────────────────
    🔘 Botões
 ─────────────────────────────────────────────────────────── */
 .btn-primary {
-  background-color: var(--color-primary);
-  border-color: var(--color-primary);
+  background: var(--clr-primary);
+  border: none;
   border-radius: var(--radius);
-  padding: 0.6rem 1.2rem;
-  font-weight: 500;
-  transition: background-color var(--transition), transform var(--transition);
+  padding: 0.7rem 1.5rem;
+  font-weight: 600;
+  box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+  transition: background var(--transition), transform var(--transition);
 }
-.btn-primary:hover, .btn-primary:focus {
-  background-color: var(--color-primary-hover);
-  transform: translateY(-2px);
+.btn-primary:hover {
+  background: var(--clr-primary-hover);
+  transform: translateY(-4px);
 }
-
-.btn-secondary {
-  background-color: var(--color-secondary);
-  border-color: var(--color-secondary);
-  border-radius: var(--radius);
-  padding: 0.6rem 1.2rem;
-  font-weight: 500;
-  transition: background-color var(--transition), transform var(--transition);
-}
-.btn-secondary:hover, .btn-secondary:focus {
-  background-color: var(--color-secondary-hover);
-  transform: translateY(-2px);
-}
-
-/* botoões outline */
 .btn-outline-primary {
-  color: var(--color-primary);
-  border-color: var(--color-primary);
+  color: var(--clr-primary);
+  border: 2px solid var(--clr-primary);
+  background: transparent;
 }
 .btn-outline-primary:hover {
-  background-color: var(--color-primary);
+  background: var(--clr-primary);
   color: #fff;
 }
-
 .btn-outline-success {
-  color: var(--color-secondary);
-  border-color: var(--color-secondary);
+  color: var(--clr-secondary);
+  border: 2px solid var(--clr-secondary);
+  background: transparent;
 }
 .btn-outline-success:hover {
-  background-color: var(--color-secondary);
+  background: var(--clr-secondary);
   color: #fff;
 }
 
 /* ───────────────────────────────────────────────────────────
-   🎨 Inputs e Feedback
+   🎨 Inputs & Feedback
 ─────────────────────────────────────────────────────────── */
 .form-control {
   border-radius: var(--radius);
-  border: 1px solid #ced4da;
-  transition: border-color var(--transition), box-shadow var(--transition);
+  border: 1px solid var(--clr-surface-border);
+  background: rgba(255,255,255,0.2);
+  color: var(--clr-text);
+  transition: border var(--transition), box-shadow var(--transition);
 }
-
+.form-control::placeholder {
+  color: rgba(255,255,255,0.7);
+}
 .form-control:focus {
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 0.15rem rgba(26,115,232,0.25);
+  border: 1px solid var(--clr-primary);
+  box-shadow: 0 0 0 0.25rem rgba(255,107,107,0.4);
+  background: rgba(255,255,255,0.3);
 }
-
 input.is-invalid {
-  border-color: #dc3545 !important;
+  border: 2px solid #ff4757;
 }
 
 /* ───────────────────────────────────────────────────────────
    🔲 Tabelas de Quadros Semanais
 ─────────────────────────────────────────────────────────── */
 .table {
+  background: rgba(255,255,255,0.2);
+  backdrop-filter: blur(6px);
   border-radius: var(--radius);
   overflow: hidden;
-  box-shadow: var(--shadow-sm);
+  margin-top: 1rem;
 }
-
 .table thead {
-  background-color: #e9ecef;
+  background: rgba(0,0,0,0.1);
 }
-
 .table th, .table td {
-  vertical-align: middle;
+  color: var(--clr-text);
+  padding: 1rem;
   text-align: center;
-  padding: 0.75rem;
 }
 
 /* ───────────────────────────────────────────────────────────
@@ -154,36 +173,37 @@ input.is-invalid {
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 240px;
-  margin: 1rem 0;
+  height: 260px;
+  margin: 1.5rem 0;
 }
 
 /* ───────────────────────────────────────────────────────────
-   🖼 Toast e Modais
+   🖼 Toast & Modais
 ─────────────────────────────────────────────────────────── */
 .modal-content {
+  background: rgba(255,255,255,0.15);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--clr-surface-border);
   border-radius: var(--radius);
-  box-shadow: var(--shadow-md);
 }
-
 .toast {
+  background: rgba(255,255,255,0.25);
+  backdrop-filter: blur(8px);
   border-radius: var(--radius);
-  box-shadow: var(--shadow-sm);
+  color: var(--clr-text);
 }
 
 /* ───────────────────────────────────────────────────────────
-   🌐 Responsividade e Ajustes Finais
+   🌐 Responsividade
 ─────────────────────────────────────────────────────────── */
 @media (max-width: 768px) {
+  h1 { font-size: 2rem; }
   #gerarRotatividadeBtn {
     width: 100%;
-  }
-  .card-header {
-    font-size: 1rem;
   }
 }
 
 @media (max-width: 576px) {
-  h1 { font-size: 1.5rem; }
-  .btn { font-size: 0.9rem; }
+  h1 { font-size: 1.75rem; }
+  .btn { font-size: 0.9rem; padding: 0.6rem 1rem; }
 }
