@@ -42,26 +42,29 @@ async function salvarLista(nomeAba, dados) {
   await acessarPlanilha();
   let sheet = doc.sheetsByTitle[nomeAba];
 
-  // 1) cria a aba com cabeçalho, se ainda não existir
+  // 1) Cria a aba, se não existir
   if (!sheet) {
-    sheet = await doc.addSheet({ title: nomeAba, headerValues: ['Nome'] });
+    sheet = await doc.addSheet({
+      title: nomeAba,
+      headerValues: ['Nome']
+    });
+  } else {
+    // 2) Limpa tudo (mantendo a aba)
+    await sheet.clear();
+    // 3) Recria apenas o cabeçalho
+    await sheet.setHeaderRow(['Nome']);
   }
 
-  // 2) limpa TUDO que estiver nela
-  await sheet.clear();
-
-  // 3) recria o header
-  await sheet.setHeaderRow(['Nome']);
-
-  // 4) prepara só nomes únicos e não-vazios
+  // 4) Normaliza, filtra vazio e deduplica
   const nomes = [...new Set(dados.map(normalizarNome).filter(Boolean))];
 
-  // 5) adiciona linha a linha
+  // 5) Se houver nomes, adiciona-os
   if (nomes.length) {
-    await sheet.addRows(nomes.map(n => ({ Nome: n })));
+    await sheet.addRows(
+      nomes.map(nome => ({ Nome: nome }))
+    );
   }
 }
-
 
 
 
