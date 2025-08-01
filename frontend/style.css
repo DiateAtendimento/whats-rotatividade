@@ -10,7 +10,7 @@
   /* Cores principais */
   --color-bg-gradient: linear-gradient(135deg, #f0f4f8 0%, #d9e2ec 100%);
   --color-bg-solid: #f8f9fa;
-  --clr-surface: rgba(255, 255, 255, 0.6);
+  --clr-surface: rgb(255, 255, 255);
   --clr-surface-border: rgba(255, 255, 255, 0.3);
   --clr-primary: #2563eb;
   --clr-primary-hover: #1e4db7;
