@@ -298,10 +298,27 @@ async function mostrarAnimacao(file, cb) {
   }
 }
 
-// Conta quantas semanas o mês atual possui
+// Conta quantas semanas "completas" o mês atual possui,
+// começando sempre na primeira segunda-feira >= dia 1
 function contarSemanasDoMesAtual() {
-  const now      = new Date();
-  const primeiro = new Date(now.getFullYear(), now.getMonth(), 1).getDay();
-  const dias     = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
-  return Math.ceil((primeiro + dias) / 7);
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = now.getMonth();
+
+  // Último dia do mês
+  const lastDay = new Date(year, month + 1, 0).getDate();
+  // Dia da semana do dia 1 (0=Dom, 1=Seg, …)
+  const firstWeekday = new Date(year, month, 1).getDay();
+  // Calcula deslocamento até a próxima segunda-feira
+  // Se dia 1 já é segunda (1), offset = 0; senão, quanto falta até o próximo 1
+  const offset = (8 - firstWeekday) % 7;
+  const firstMonday = 1 + offset;
+
+  // Se o mês não tiver sequer UMA segunda-feira completa, retorna 0
+  if (firstMonday > lastDay) return 0;
+
+  // Dias contados a partir daquela segunda até o fim do mês
+  const daysCount = lastDay - firstMonday + 1;
+  // Cada semana tem 7 dias
+  return Math.ceil(daysCount / 7);
 }
